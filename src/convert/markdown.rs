@@ -64,12 +64,12 @@ pub fn convert(source: Vec<Node>) -> String {
         text,
       } => {
         markdown.push_str(&format!(
-          "```{}\n{}\n```",
+          "```{}\n{}```",
           alt_text.unwrap_or("".to_string()),
           text
         ));
       }
-      Node::Whitespace => markdown.push('\n'),
+      Node::Whitespace => markdown.push_str("\n\n"),
     }
   }
 
