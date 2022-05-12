@@ -231,7 +231,15 @@ fn evaluate(
 
         nodes.push(Node::Link {
           to:   split.next().expect("no location in link"),
-          text: split.next(),
+          text: {
+            let rest = split.collect::<Vec<String>>().join(" ");
+
+            if rest.is_empty() {
+              None
+            } else {
+              Some(rest)
+            }
+          },
         });
 
         break;

@@ -53,5 +53,5 @@ fn main() {
       germ::convert::Target::Markdown,
     ),
   )
-    .expect("could not write to file");
+  .expect("could not write to file");
 }
