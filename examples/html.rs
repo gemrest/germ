@@ -46,15 +46,12 @@ This is more text after a blank line.
 That was a link without text."#;
 
 fn main() {
-  println!(
-    "{}",
-    // germ::convert::convert_from_ast(
-    //   germ::ast::build(EXAMPLE_GEMTEXT),
-    //   germ::convert::Target::Markdown
-    // )
+  std::fs::write(
+    "examples/convert.html",
     germ::convert::convert_from_string(
       EXAMPLE_GEMTEXT,
       germ::convert::Target::HTML,
     ),
-  );
+  )
+  .expect("could not write to file");
 }
