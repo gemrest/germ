@@ -19,11 +19,13 @@ continue to try its hardest to have as few dependencies as possible.
 
 ## Usage
 
+Current version: [![crates.io](https://img.shields.io/crates/v/germ.svg)](https://crates.io/crates/germ)
+
 ```toml
 # Cargo.toml
 
 [dependencies]
-germ = "0.1.0"
+germ = "*" # Use current version show above!
 ```
 
 ### Features
