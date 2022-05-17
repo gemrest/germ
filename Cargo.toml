@@ -18,6 +18,7 @@ categories = ["encoding"]
 ast = []
 convert = []
 request = ["rustls", "url", "anyhow"]
+meta = []
 
 [dependencies]
 rustls = { version = "0.20.5", features = ["dangerous_configuration"], optional = true } # TLS
