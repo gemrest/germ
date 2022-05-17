@@ -34,6 +34,8 @@ germ = "*" # Use current version show above!
 |-----------|------------------------------------------------------------------|
 | `ast`     | Construct AST trees from raw Gemtext.                            |
 | `convert` | Convert from Gemtext to markup formats such as HTML or Markdown. |
+| `request` | Make Gemini requests and get sane, structured results.           |
+| `meta`    | Structure-ize a Gemini response's meta section                   |
 
 ### Examples
 
