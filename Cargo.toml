@@ -16,7 +16,7 @@ categories = ["encoding"]
 
 [features]
 ast = []
-convert = []
+convert = ["ast"]
 request = ["rustls", "url", "anyhow"]
 meta = []
 
