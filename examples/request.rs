@@ -16,24 +16,9 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#![deny(
-  warnings,
-  nonstandard_style,
-  unused,
-  future_incompatible,
-  rust_2018_idioms,
-  unsafe_code,
-  clippy::all,
-  clippy::nursery,
-  clippy::pedantic
-)]
-#![recursion_limit = "128"]
-
-#[cfg(feature = "ast")]
-pub mod ast;
-
-#[cfg(feature = "convert")]
-pub mod convert;
-
-#[cfg(feature = "request")]
-pub mod request;
+fn main() {
+  match germ::request::request(url::Url::parse("gemini://fuwn.me").unwrap()) {
+    Ok(response) => println!("{:?}", response),
+    Err(_) => {}
+  }
+}

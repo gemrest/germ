@@ -16,24 +16,17 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#![deny(
-  warnings,
-  nonstandard_style,
-  unused,
-  future_incompatible,
-  rust_2018_idioms,
-  unsafe_code,
-  clippy::all,
-  clippy::nursery,
-  clippy::pedantic
-)]
-#![recursion_limit = "128"]
+#[cfg(test)]
+mod test {
+  use germ::request::Status;
 
-#[cfg(feature = "ast")]
-pub mod ast;
+  #[test]
+  fn status_from_i32() {
+    assert_eq!(Status::from(10), Status::Input);
+  }
 
-#[cfg(feature = "convert")]
-pub mod convert;
-
-#[cfg(feature = "request")]
-pub mod request;
+  #[test]
+  fn i32_from_status() {
+    assert_eq!(i32::from(Status::Input), 10);
+  }
+}

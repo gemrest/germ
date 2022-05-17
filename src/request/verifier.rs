@@ -16,24 +16,24 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#![deny(
-  warnings,
-  nonstandard_style,
-  unused,
-  future_incompatible,
-  rust_2018_idioms,
-  unsafe_code,
-  clippy::all,
-  clippy::nursery,
-  clippy::pedantic
-)]
-#![recursion_limit = "128"]
+use std::time::SystemTime;
 
-#[cfg(feature = "ast")]
-pub mod ast;
+use rustls::{client, client::ServerCertVerified, Certificate};
 
-#[cfg(feature = "convert")]
-pub mod convert;
-
-#[cfg(feature = "request")]
-pub mod request;
+pub(super) struct GermVerifier;
+impl GermVerifier {
+  pub fn new() -> Self { Self {} }
+}
+impl client::ServerCertVerifier for GermVerifier {
+  fn verify_server_cert(
+    &self,
+    _end_entity: &Certificate,
+    _intermediates: &[Certificate],
+    _server_name: &client::ServerName,
+    _scts: &mut dyn Iterator<Item = &[u8]>,
+    _ocsp_response: &[u8],
+    _now: SystemTime,
+  ) -> Result<ServerCertVerified, rustls::Error> {
+    Ok(ServerCertVerified::assertion())
+  }
+}
