@@ -16,27 +16,35 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#![deny(
-  warnings,
-  nonstandard_style,
-  unused,
-  future_incompatible,
-  rust_2018_idioms,
-  unsafe_code,
-  clippy::all,
-  clippy::nursery,
-  clippy::pedantic
-)]
-#![recursion_limit = "128"]
+#[cfg(test)]
+mod test {
+  use germ::meta::Meta;
 
-#[cfg(feature = "ast")]
-pub mod ast;
+  #[test]
+  fn meta_to_map_mime() {
+    assert_eq!(
+      Meta::from_str("text/gemini; hi=2; hi2=string=2").mime,
+      "text/gemini",
+    );
+  }
 
-#[cfg(feature = "convert")]
-pub mod convert;
+  #[test]
+  fn meta_to_map_with_parameters() {
+    assert_eq!(
+      Meta::from_str("text/gemini; hi=2; hi2=string=2")
+        .parameters
+        .get("hi2"),
+      Some(&"string=2".to_string()),
+    );
+  }
 
-#[cfg(feature = "request")]
-pub mod request;
-
-#[cfg(feature = "meta")]
-pub mod meta;
+  #[test]
+  fn meta_to_map_length() {
+    assert_eq!(
+      Meta::from_str("text/gemini; hi=2; hi2=string=2")
+        .parameters
+        .len(),
+      2,
+    );
+  }
+}
