@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 fn main() {
-  match germ::request::request(url::Url::parse("gemini://fuwn.me").unwrap()) {
+  match germ::request::request(&url::Url::parse("gemini://fuwn.me").unwrap()) {
     Ok(response) => println!("{:?}", response),
     Err(_) => {}
   }

@@ -28,18 +28,19 @@ pub struct Meta {
   pub parameters: HashMap<String, String>,
 }
 impl Meta {
-  pub fn from_str(meta: &str) -> Self {
-    let mut metas = meta.split(";");
+  #[must_use]
+  pub fn from_string(meta: &str) -> Self {
+    let mut metas = meta.split(';');
     let mime = metas.next().unwrap_or("").to_string();
     let mut parameters = HashMap::new();
 
     for parameter in metas {
       let key_value = parameter
         .trim_start()
-        .split_at(parameter.find("=").unwrap_or(0));
+        .split_at(parameter.find('=').unwrap_or(0));
 
       parameters.insert(
-        key_value.0.to_string().replace("=", ""),
+        key_value.0.to_string().replace('=', ""),
         key_value.1.to_string(),
       );
     }

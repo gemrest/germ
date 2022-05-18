@@ -29,21 +29,18 @@ pub struct Response {
   pub suite:   Option<SupportedCipherSuite>,
 }
 impl Response {
-  pub(super) fn new(
-    data: Vec<u8>,
-    suite: Option<SupportedCipherSuite>,
-  ) -> Self {
-    let string_form = String::from_utf8_lossy(&data).to_string();
+  pub(super) fn new(data: &[u8], suite: Option<SupportedCipherSuite>) -> Self {
+    let string_form = String::from_utf8_lossy(data).to_string();
     let mut content = None;
     let header;
 
-    if !string_form.ends_with("\r\n") {
+    if string_form.ends_with("\r\n") {
+      header = string_form;
+    } else {
       let mut string_split = string_form.split("\r\n");
 
       header = string_split.next().unwrap_or("").to_string();
       content = Some(string_split.collect());
-    } else {
-      header = string_form;
     }
 
     let header_split = header.split_at(2);

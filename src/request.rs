@@ -34,12 +34,17 @@ use verifier::GermVerifier;
 /// # Example
 ///
 /// ```rust
-/// match germ::request::request(url::Url::parse("gemini://fuwn.me").unwrap()) {
+/// match germ::request::request(&url::Url::parse("gemini://fuwn.me").unwrap()) {
 ///   Ok(response) => println!("{:?}", response),
 ///   Err(_) => {}
 /// }
 /// ```
-pub fn request(url: url::Url) -> anyhow::Result<Response> {
+///
+/// # Errors
+/// - May error if the URL is invalid
+/// - May error if the TLS write fails
+/// - May error if the TLS read fails
+pub fn request(url: &url::Url) -> anyhow::Result<Response> {
   let config = rustls::ClientConfig::builder()
     .with_safe_defaults()
     .with_custom_certificate_verifier(std::sync::Arc::new(GermVerifier::new()))
@@ -59,10 +64,10 @@ pub fn request(url: url::Url) -> anyhow::Result<Response> {
 
   let mut plain_text = Vec::new();
 
-  tls.read_to_end(&mut plain_text).unwrap();
+  tls.read_to_end(&mut plain_text)?;
 
   Ok(Response::new(
-    plain_text,
+    &plain_text,
     tls.conn.negotiated_cipher_suite(),
   ))
 }

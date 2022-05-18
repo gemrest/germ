@@ -48,9 +48,9 @@ That was a link without text."#;
 fn main() {
   std::fs::write(
     "examples/convert.md",
-    germ::convert::convert_from_string(
+    germ::convert::from_string(
       EXAMPLE_GEMTEXT,
-      germ::convert::Target::Markdown,
+      &germ::convert::Target::Markdown,
     ),
   )
   .expect("could not write to file");

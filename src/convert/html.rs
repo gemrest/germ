@@ -33,7 +33,7 @@ pub fn convert(source: Vec<Node>) -> String {
         html.push_str(&format!(
           "<a href=\"{}\">{}</a><br>",
           to,
-          text.unwrap_or(to.clone())
+          text.unwrap_or_else(|| to.clone())
         ));
       }
       Node::Heading {
@@ -67,7 +67,7 @@ pub fn convert(source: Vec<Node>) -> String {
       } => {
         html.push_str(&format!("<pre>{}</pre>", text));
       }
-      _ => {}
+      Node::Whitespace => {}
     }
   }
 

@@ -30,11 +30,10 @@ pub fn convert(source: Vec<Node>) -> String {
         to,
         text,
       } =>
-        markdown.push_str(&if let Some(text) = text {
-          format!("[{}]({})", text, to)
-        } else {
-          format!("<{}>", to)
-        }),
+        markdown.push_str(&*text.map_or_else(
+          || format!("<{}>", to),
+          |text| format!("[{}]({})", text, to),
+        )),
       Node::Heading {
         level,
         text,
@@ -65,7 +64,7 @@ pub fn convert(source: Vec<Node>) -> String {
       } => {
         markdown.push_str(&format!(
           "```{}\n{}```",
-          alt_text.unwrap_or("".to_string()),
+          alt_text.unwrap_or_else(|| "".to_string()),
           text
         ));
       }

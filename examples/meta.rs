@@ -19,6 +19,6 @@
 fn main() {
   println!(
     "{:?}",
-    germ::meta::Meta::from_str("text/gemini; hi=2; hi2=string=2")
+    germ::meta::Meta::from_string("text/gemini; hi=2; hi2=string=2")
   )
 }

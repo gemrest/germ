@@ -202,6 +202,7 @@ pub fn build(source: &str) -> Vec<Node> {
   ast
 }
 
+#[allow(clippy::too_many_lines)]
 fn evaluate(
   line: &str,
   lines: &mut std::str::Lines<'_>,
@@ -320,7 +321,7 @@ fn evaluate(
         break;
       }
       // This as a catchall, it does a number of things.
-      _ =>
+      _ => {
         if *in_preformatted {
           // If we are in a preformatted line context, add the line to the
           // preformatted blocks content and increment the line.
@@ -342,7 +343,8 @@ fn evaluate(
           nodes.push(Node::Text(line.to_string()));
 
           break;
-        },
+        }
+      }
     }
   }
 
