@@ -25,21 +25,21 @@ pub fn convert(source: Vec<Node>) -> String {
   // this AST tree to an alternative markup format.
   for node in source {
     match node {
-      Node::Text(text) => markdown.push_str(&text),
+      Node::Text(text) => markdown.push_str(&format!("{}\n", text)),
       Node::Link {
         to,
         text,
       } =>
         markdown.push_str(&*text.map_or_else(
-          || format!("<{}>", to),
-          |text| format!("[{}]({})", text, to),
+          || format!("<{}>\n", to),
+          |text| format!("[{}]({})\n", text, to),
         )),
       Node::Heading {
         level,
         text,
       } => {
         markdown.push_str(&format!(
-          "{} {}",
+          "{} {}\n",
           match level {
             1 => "#",
             2 => "##",
@@ -50,20 +50,20 @@ pub fn convert(source: Vec<Node>) -> String {
         ));
       }
       Node::List(items) =>
-        markdown.push_str(
-          &items
+        markdown.push_str(&format!("{}\n",
+          items
             .into_iter()
             .map(|i| format!("- {}", i))
             .collect::<Vec<String>>()
-            .join("\n"),
+            .join("\n"),),
         ),
-      Node::Blockquote(text) => markdown.push_str(&format!("> {}", text)),
+      Node::Blockquote(text) => markdown.push_str(&format!("> {}\n", text)),
       Node::PreformattedText {
         alt_text,
         text,
       } => {
         markdown.push_str(&format!(
-          "```{}\n{}```",
+          "```{}\n{}```\n",
           alt_text.unwrap_or_else(|| "".to_string()),
           text
         ));
