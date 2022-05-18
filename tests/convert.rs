@@ -18,14 +18,11 @@
 
 #[cfg(test)]
 mod test {
-  use germ::convert::{Target, from_string};
+  use germ::convert::{from_string, Target};
 
   #[test]
   fn convert_from_string_to_html_single_line() {
-    assert_eq!(
-      from_string("hi", &Target::HTML),
-      "<p>hi</p>",
-    );
+    assert_eq!(from_string("hi", &Target::HTML), "<p>hi</p>",);
   }
 
   #[test]
@@ -46,18 +43,12 @@ mod test {
 
   #[test]
   fn convert_from_string_to_markdown_single_line() {
-    assert_eq!(
-      from_string("hi", &Target::Markdown),
-      "hi\n",
-    );
+    assert_eq!(from_string("hi", &Target::Markdown), "hi\n",);
   }
 
   #[test]
   fn convert_from_string_to_markdown_multi_line() {
-    assert_eq!(
-      from_string("hi\n# hi", &Target::Markdown),
-      "hi\n# hi\n",
-    );
+    assert_eq!(from_string("hi\n# hi", &Target::Markdown), "hi\n# hi\n",);
   }
 
   #[test]

@@ -23,7 +23,7 @@ mod test {
   #[test]
   fn meta_to_map_mime() {
     assert_eq!(
-      Meta::from_string("text/gemini; hi=2; hi2=string=2").mime,
+      Meta::from_string("text/gemini; hi=2; hi2=string=2").mime(),
       "text/gemini",
     );
   }
@@ -32,7 +32,7 @@ mod test {
   fn meta_to_map_with_parameters() {
     assert_eq!(
       Meta::from_string("text/gemini; hi=2; hi2=string=2")
-        .parameters
+        .parameters()
         .get("hi2"),
       Some(&"string=2".to_string()),
     );
@@ -42,7 +42,7 @@ mod test {
   fn meta_to_map_length() {
     assert_eq!(
       Meta::from_string("text/gemini; hi=2; hi2=string=2")
-        .parameters
+        .parameters()
         .len(),
       2,
     );

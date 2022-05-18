@@ -50,13 +50,14 @@ pub fn convert(source: Vec<Node>) -> String {
         ));
       }
       Node::List(items) =>
-        markdown.push_str(&format!("{}\n",
+        markdown.push_str(&format!(
+          "{}\n",
           items
             .into_iter()
             .map(|i| format!("- {}", i))
             .collect::<Vec<String>>()
-            .join("\n"),),
-        ),
+            .join("\n"),
+        )),
       Node::Blockquote(text) => markdown.push_str(&format!("> {}\n", text)),
       Node::PreformattedText {
         alt_text,
