@@ -72,7 +72,7 @@ impl From<Status> for i32 {
       Status::ClientCertificateRequired => 60,
       Status::CertificateNotAuthorised => 61,
       Status::CertificateNotValid => 62,
-      _ => 0,
+      Status::Unsupported => 0,
     }
   }
 }

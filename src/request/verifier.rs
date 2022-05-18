@@ -22,7 +22,7 @@ use rustls::{client, client::ServerCertVerified, Certificate};
 
 pub(super) struct GermVerifier;
 impl GermVerifier {
-  pub fn new() -> Self { Self {} }
+  pub const fn new() -> Self { Self {} }
 }
 impl client::ServerCertVerifier for GermVerifier {
   fn verify_server_cert(

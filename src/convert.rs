@@ -36,15 +36,13 @@ pub enum Target {
 /// ```rust
 /// use germ::convert;
 ///
-/// convert::convert_from_ast(
+/// convert::from_ast(
 ///   germ::ast::build(r#"=> gemini://gem.rest/ GemRest"#),
-///   convert::Target::HTML,
+///   &convert::Target::HTML,
 /// );
 /// ```
-pub fn convert_from_ast(
-  source: Vec<crate::ast::Node>,
-  target: Target,
-) -> String {
+#[must_use]
+pub fn from_ast(source: Vec<crate::ast::Node>, target: &Target) -> String {
   match target {
     Target::Markdown => markdown::convert(source),
     Target::HTML => html::convert(source),
@@ -58,11 +56,12 @@ pub fn convert_from_ast(
 /// ```rust
 /// use germ::convert;
 ///
-/// convert::convert_from_string(
+/// convert::from_string(
 ///   r#"=> gemini://gem.rest/ GemRest"#,
-///   convert::Target::HTML,
+///   &convert::Target::HTML,
 /// );
 /// ```
-pub fn convert_from_string(source: &str, target: Target) -> String {
-  convert_from_ast(crate::ast::build(source), target)
+#[must_use]
+pub fn from_string(source: &str, target: &Target) -> String {
+  from_ast(crate::ast::build(source), target)
 }
