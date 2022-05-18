@@ -7,8 +7,9 @@
 The Ultimate Gemini Toolkit.
 
 Germ is a toolkit for the Gemini protocol which aims to have a little something
-for everyone. At the moment, Germ has **ZERO** dependencies, and Germ will
-continue to try its hardest to have as few dependencies as possible.
+for everyone. At the moment, Germ has **ZERO** dependencies (unless you use the
+`request` feature), and Germ will continue to try its hardest to have as few
+dependencies as possible.
 
 ## Features
 
