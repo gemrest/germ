@@ -22,11 +22,11 @@ use crate::request::Status;
 
 #[derive(Debug)]
 pub struct Response {
-  pub status:  Status,
-  pub meta:    String,
-  pub content: Option<String>,
-  pub size:    usize,
-  pub suite:   Option<SupportedCipherSuite>,
+  status:  Status,
+  meta:    String,
+  content: Option<String>,
+  size:    usize,
+  suite:   Option<SupportedCipherSuite>,
 }
 impl Response {
   pub(super) fn new(data: &[u8], suite: Option<SupportedCipherSuite>) -> Self {
@@ -53,4 +53,19 @@ impl Response {
       suite,
     }
   }
+
+  #[must_use]
+  pub const fn status(&self) -> &Status { &self.status }
+
+  #[must_use]
+  pub fn meta(&self) -> &str { &self.meta }
+
+  #[must_use]
+  pub const fn content(&self) -> &Option<String> { &self.content }
+
+  #[must_use]
+  pub const fn size(&self) -> &usize { &self.size }
+
+  #[must_use]
+  pub const fn suite(&self) -> &Option<SupportedCipherSuite> { &self.suite }
 }
