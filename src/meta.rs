@@ -23,9 +23,9 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub struct Meta {
   /// The mime type of a Gemini response
-  pub mime:       String,
+  mime:       String,
   /// The parameters of a Gemini response
-  pub parameters: HashMap<String, String>,
+  parameters: HashMap<String, String>,
 }
 impl Meta {
   #[must_use]
@@ -49,5 +49,13 @@ impl Meta {
       mime,
       parameters,
     }
+  }
+
+  #[must_use]
+  pub fn mime(&self) -> &str { &self.mime }
+
+  #[must_use]
+  pub const fn parameters(&self) -> &HashMap<String, String> {
+    &self.parameters
   }
 }
