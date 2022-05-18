@@ -7,11 +7,11 @@ command = "cargo"
 toolchain = "nightly"
 
 [tasks.check]
-args = ["check"]
+args = ["check", "--all-features"]
 command = "cargo"
 
 [tasks.clippy]
-args = ["clippy"]
+args = ["clippy", "--all-features"]
 command = "cargo"
 
 [tasks.test]
