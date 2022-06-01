@@ -16,6 +16,9 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
+use std::fmt;
+use std::fmt::Formatter;
+
 /// Simple Gemini status reporting
 ///
 /// # Examples
@@ -99,5 +102,10 @@ impl From<i32> for Status {
       62 => Self::CertificateNotValid,
       _ => Self::Unsupported,
     }
+  }
+}
+impl fmt::Display for Status {
+  fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    write!(f, "{:?}", self)
   }
 }
