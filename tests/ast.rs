@@ -20,6 +20,35 @@
 mod test {
   use germ::ast::{Ast, Node};
 
+  const EXAMPLE_GEMTEXT: &str = r#"```This is alt-text
+Here goes the pre-formatted text.
+
+This continues the pre-formatted text on a new line after a blank line.
+```
+
+# This is a heading
+
+This is some text.
+
+This is more text after a blank line.
+
+* This is a single list item.
+* This is the next list item.
+
+* This is a new list.
+* This is the next item on the new list.
+
+## This is a sub-heading
+
+> This is a blockquote.
+
+### This is a sub-sub-heading.
+
+=> gemini://gem.rest/ This is a link to GemRest
+=> /somewhere
+
+That was a link without text."#;
+
   #[test]
   fn build_multi_line_list_with_text() {
     assert_eq!(
@@ -65,6 +94,16 @@ mod test {
         to:   "/test".to_string(),
         text: Some("hi".to_string()),
       },
+    );
+  }
+
+  #[test]
+  fn gemtext_to_ast_then_ast_to_gemtext() {
+    assert_eq!(
+      Ast::from_string(EXAMPLE_GEMTEXT).to_gemtext(),
+      // `to_gemtext` appends a newline to all responses, so let's make sure we
+      // account for that.
+      format!("{}\n", EXAMPLE_GEMTEXT),
     );
   }
 }

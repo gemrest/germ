@@ -215,6 +215,64 @@ impl Ast {
     }
   }
 
+  #[must_use]
+  pub fn to_gemtext(&self) -> String {
+    let mut gemtext = "".to_string();
+
+    for node in &self.inner {
+      match node {
+        Node::Text(text) => gemtext.push_str(&format!("{}\n", text)),
+        Node::Link {
+          to,
+          text,
+        } =>
+          gemtext.push_str(&format!(
+            "=> {}{}\n",
+            to,
+            text
+              .clone()
+              .map_or_else(|| "".to_string(), |text| format!(" {}", text)),
+          )),
+        Node::Heading {
+          level,
+          text,
+        } =>
+          gemtext.push_str(&format!(
+            "{} {}\n",
+            match level {
+              1 => "#",
+              2 => "##",
+              3 => "###",
+              _ => "",
+            },
+            text
+          )),
+        Node::List(items) =>
+          gemtext.push_str(&format!(
+            "{}\n",
+            items
+              .iter()
+              .map(|i| format!("* {}", i))
+              .collect::<Vec<String>>()
+              .join("\n"),
+          )),
+        Node::Blockquote(text) => gemtext.push_str(&format!("> {}\n", text)),
+        Node::PreformattedText {
+          alt_text,
+          text,
+        } =>
+          gemtext.push_str(&format!(
+            "```{}\n{}```\n",
+            alt_text.clone().unwrap_or_else(|| "".to_string()),
+            text
+          )),
+        Node::Whitespace => gemtext.push('\n'),
+      }
+    }
+
+    gemtext
+  }
+
   /// The actual AST of `Ast`
   ///
   /// # Example
