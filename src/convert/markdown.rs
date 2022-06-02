@@ -18,7 +18,7 @@
 
 use crate::ast::Node;
 
-pub fn convert(source: Vec<Node>) -> String {
+pub fn convert(source: &[Node]) -> String {
   let mut markdown = String::new();
 
   // Since we have an AST tree of the Gemtext, it is very easy to convert from
@@ -30,7 +30,7 @@ pub fn convert(source: Vec<Node>) -> String {
         to,
         text,
       } =>
-        markdown.push_str(&*text.map_or_else(
+        markdown.push_str(&*text.clone().map_or_else(
           || format!("<{}>\n", to),
           |text| format!("[{}]({})\n", text, to),
         )),
@@ -53,7 +53,7 @@ pub fn convert(source: Vec<Node>) -> String {
         markdown.push_str(&format!(
           "{}\n",
           items
-            .into_iter()
+            .iter()
             .map(|i| format!("- {}", i))
             .collect::<Vec<String>>()
             .join("\n"),
@@ -65,7 +65,7 @@ pub fn convert(source: Vec<Node>) -> String {
       } => {
         markdown.push_str(&format!(
           "```{}\n{}```\n",
-          alt_text.unwrap_or_else(|| "".to_string()),
+          alt_text.clone().unwrap_or_else(|| "".to_string()),
           text
         ));
       }

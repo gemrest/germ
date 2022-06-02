@@ -18,12 +18,12 @@
 
 #[cfg(test)]
 mod test {
-  use germ::ast::{build, Node};
+  use germ::ast::{Ast, Node};
 
   #[test]
   fn build_multi_line_list_with_text() {
     assert_eq!(
-      build("* item1\n* 2\nhi text"),
+      *Ast::from_string("* item1\n* 2\nhi text").inner(),
       vec![
         Node::List(vec!["item1".to_string(), "2".to_string()]),
         Node::Text("hi text".to_string()),
@@ -34,7 +34,7 @@ mod test {
   #[test]
   fn build_multi_line_vec() {
     assert_eq!(
-      build("=> /test hi\nhi there\n> hi"),
+      *Ast::from_string("=> /test hi\nhi there\n> hi").inner(),
       vec![
         Node::Link {
           to:   "/test".to_string(),
@@ -49,8 +49,8 @@ mod test {
   #[test]
   fn build_single_0th_from_vec() {
     assert_eq!(
-      build("=> /test hi"),
-      vec![Node::Link {
+      Ast::from_string("=> /test hi").inner(),
+      &vec![Node::Link {
         to:   "/test".to_string(),
         text: Some("hi".to_string()),
       }],
@@ -60,7 +60,7 @@ mod test {
   #[test]
   fn build_single_element() {
     assert_eq!(
-      build("=> /test hi").get(0).unwrap(),
+      Ast::from_string("=> /test hi").inner().get(0).unwrap(),
       &Node::Link {
         to:   "/test".to_string(),
         text: Some("hi".to_string()),
