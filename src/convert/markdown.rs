@@ -69,7 +69,7 @@ pub fn convert(source: &[Node]) -> String {
           text
         ));
       }
-      Node::Whitespace => markdown.push_str("\n\n"),
+      Node::Whitespace => markdown.push_str("\n"),
     }
   }
 
