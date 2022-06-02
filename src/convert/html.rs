@@ -18,7 +18,7 @@
 
 use crate::ast::Node;
 
-pub fn convert(source: Vec<Node>) -> String {
+pub fn convert(source: &[Node]) -> String {
   let mut html = String::new();
 
   // Since we have an AST tree of the Gemtext, it is very easy to convert from
@@ -33,7 +33,7 @@ pub fn convert(source: Vec<Node>) -> String {
         html.push_str(&format!(
           "<a href=\"{}\">{}</a><br>",
           to,
-          text.unwrap_or_else(|| to.clone())
+          text.clone().unwrap_or_else(|| to.clone())
         ));
       }
       Node::Heading {
@@ -55,7 +55,7 @@ pub fn convert(source: Vec<Node>) -> String {
         html.push_str(&format!(
           "<ul>{}</ul>",
           items
-            .into_iter()
+            .iter()
             .map(|i| format!("<li>{}</li>", i))
             .collect::<Vec<String>>()
             .join("\n")

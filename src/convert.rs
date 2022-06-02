@@ -18,6 +18,8 @@
 
 //! Convert Gemtext into many types of markup.
 
+use crate::ast::Ast;
+
 mod html;
 mod markdown;
 
@@ -36,16 +38,16 @@ pub enum Target {
 /// ```rust
 /// use germ::convert;
 ///
-/// convert::from_ast(
-///   germ::ast::build(r#"=> gemini://gem.rest/ GemRest"#),
+/// let _ = convert::from_ast(
+///   &germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#),
 ///   &convert::Target::HTML,
 /// );
 /// ```
 #[must_use]
-pub fn from_ast(source: Vec<crate::ast::Node>, target: &Target) -> String {
+pub fn from_ast(source: &Ast, target: &Target) -> String {
   match target {
-    Target::Markdown => markdown::convert(source),
-    Target::HTML => html::convert(source),
+    Target::Markdown => markdown::convert(source.inner()),
+    Target::HTML => html::convert(source.inner()),
   }
 }
 
@@ -56,12 +58,12 @@ pub fn from_ast(source: Vec<crate::ast::Node>, target: &Target) -> String {
 /// ```rust
 /// use germ::convert;
 ///
-/// convert::from_string(
+/// let _ = convert::from_string(
 ///   r#"=> gemini://gem.rest/ GemRest"#,
 ///   &convert::Target::HTML,
 /// );
 /// ```
 #[must_use]
 pub fn from_string(source: &str, target: &Target) -> String {
-  from_ast(crate::ast::build(source), target)
+  from_ast(&Ast::from_string(source), target)
 }

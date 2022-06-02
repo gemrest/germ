@@ -21,6 +21,8 @@ request = ["rustls", "url", "anyhow"]
 meta = []
 
 [dependencies]
-rustls = { version = "0.20.5", features = ["dangerous_configuration"], optional = true } # TLS
+rustls = { version = "0.20.5", features = [
+  "dangerous_configuration"
+], optional = true } # TLS
 url = { version = "2.2.2", optional = true } # URL Validation
 anyhow = { version = "1.0.57", optional = true } # `Result`

@@ -46,7 +46,7 @@ This is more text after a blank line.
 That was a link without text."#;
 
 fn main() {
-  for node in germ::ast::build(EXAMPLE_GEMTEXT) {
+  for node in germ::ast::Ast::from_string(EXAMPLE_GEMTEXT).inner() {
     println!("{:?}", node);
   }
 }
