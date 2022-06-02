@@ -174,6 +174,13 @@ pub enum Node {
   Whitespace,
 }
 
+/// An AST structure which contains an AST tree
+///
+/// # Example
+///
+/// ```rust
+/// let _ = germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#);
+/// ```
 pub struct Ast {
   inner: Vec<Node>,
 }
@@ -213,8 +220,8 @@ impl Ast {
   /// # Example
   ///
   /// ```rust
-  ///
-  /// let _ = germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#).inner();
+  /// let _ =
+  ///   germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#).inner();
   /// ```
   #[must_use]
   pub const fn inner(&self) -> &Vec<Node> { &self.inner }
