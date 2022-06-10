@@ -28,6 +28,17 @@ pub struct Meta {
   parameters: HashMap<String, String>,
 }
 impl ToString for Meta {
+  /// Convert a `Meta` into a `String`
+  ///
+  /// # Example
+  /// ```rust
+  /// let original_string = "text/gemini; hi=2; hi2=string=2";
+  ///
+  /// assert_eq!(
+  ///   germ::meta::Meta::from_string(original_string).to_string(),
+  ///   original_string
+  /// );
+  /// ```
   fn to_string(&self) -> String {
     format!("{}{}", self.mime, {
       let mut parameters = self
@@ -47,9 +58,26 @@ impl ToString for Meta {
   }
 }
 impl Meta {
+  /// Create a new `Meta`
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// let mut meta = germ::meta::Meta::new(); 
+  /// ```
   #[must_use]
   pub fn new() -> Self { Self::default() }
 
+  /// Create a `Meta` from a string
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// assert_eq!(
+  ///   germ::meta::Meta::from_string("text/gemini; hi=2; hi2=string=2").mime(),
+  ///   "text/gemini",
+  /// );
+  /// ```
   #[must_use]
   pub fn from_string(meta: &str) -> Self {
     let mut metas = meta.split(';');
@@ -73,16 +101,60 @@ impl Meta {
     }
   }
 
+  /// Obtain non-mutable access to the mime of the `Meta`
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// assert_eq!(
+  ///   germ::meta::Meta::from_string("text/gemini; hi=2; hi2=string=2").mime(),
+  ///   "text/gemini",
+  /// );
+  /// ```
   #[must_use]
   pub fn mime(&self) -> &str { &self.mime }
 
+  /// Obtain mutable access to the mime of the `Meta`
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// let mut meta = germ::meta::Meta::new();
+  ///
+  /// *meta.mime_mut() = "text/gemini".to_string();
+  /// ```
   pub fn mime_mut(&mut self) -> &mut String { &mut self.mime }
 
+  /// Obtain non-mutable access to the parameters of the `Meta`
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// assert_eq!(
+  ///   germ::meta::Meta::from_string("text/gemini; hi=2; hi2=string=2")
+  ///     .parameters()
+  ///     .get("hi2"),
+  ///   Some(&"string=2".to_string()),
+  /// );
+  /// ```
   #[must_use]
   pub const fn parameters(&self) -> &HashMap<String, String> {
     &self.parameters
   }
 
+  /// Obtain mutable access to the parameters of the `Meta`
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// let mut meta = germ::meta::Meta::new();
+  /// let mut parameters = std::collections::HashMap::new();
+  ///
+  /// parameters.insert("hi".to_string(), "2".to_string());
+  /// parameters.insert("hi2".to_string(), "string=2".to_string());
+  ///
+  /// *meta.parameters_mut() = parameters;
+  /// ```
   pub fn parameters_mut(&mut self) -> &mut HashMap<String, String> {
     &mut self.parameters
   }
