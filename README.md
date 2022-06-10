@@ -26,7 +26,14 @@ Current version: [![crates.io](https://img.shields.io/crates/v/germ.svg)](https:
 # Cargo.toml
 
 [dependencies]
-germ = "*" # Use current version show above!
+# To enable all features
+# germ = "*" # Use current version show above!
+
+# To enable certain features
+[dependencies.germ]
+version = "*" # Use current version show above!
+default-features = false
+features = ["ast"] # Enable the features you would like to use!
 ```
 
 ### Features
