@@ -47,6 +47,7 @@ impl ToString for Meta {
         .map(|(k, v)| format!("{}={}", *k, v))
         .collect::<Vec<_>>();
 
+      parameters.sort();
       parameters.reverse();
 
       if parameters.is_empty() {
