@@ -27,6 +27,25 @@ pub struct Meta {
   /// The parameters of a Gemini response
   parameters: HashMap<String, String>,
 }
+impl ToString for Meta {
+  fn to_string(&self) -> String {
+    format!("{}{}", self.mime, {
+      let mut parameters = self
+        .parameters
+        .iter()
+        .map(|(k, v)| format!("{}={}", *k, v))
+        .collect::<Vec<_>>();
+
+      parameters.reverse();
+
+      if parameters.is_empty() {
+        "".to_string()
+      } else {
+        format!("; {}", parameters.join("; "))
+      }
+    })
+  }
+}
 impl Meta {
   #[must_use]
   pub fn from_string(meta: &str) -> Self {

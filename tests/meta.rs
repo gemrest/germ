@@ -21,6 +21,26 @@ mod test {
   use germ::meta::Meta;
 
   #[test]
+  fn meta_to_string_without_parameters() {
+    let original_string = "text/gemini";
+
+    assert_eq!(
+      Meta::from_string(original_string).to_string(),
+      original_string
+    );
+  }
+
+  #[test]
+  fn meta_to_string_with_parameters() {
+    let original_string = "text/gemini; hi=2; hi2=string=2";
+
+    assert_eq!(
+      Meta::from_string(original_string).to_string(),
+      original_string
+    );
+  }
+
+  #[test]
   fn meta_to_mime_without_parameters() {
     let meta = Meta::from_string("text/gemini");
 
