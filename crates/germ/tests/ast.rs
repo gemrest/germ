@@ -106,4 +106,26 @@ That was a link without text."#;
       format!("{}\n", EXAMPLE_GEMTEXT),
     );
   }
+
+  #[test]
+  fn gemtext_to_ast_then_ast_to_gemtext_macro() {
+    assert_eq!(
+      germ::gemini_to_ast!(EXAMPLE_GEMTEXT).to_gemtext(),
+      // `to_gemtext` appends a newline to all responses, so let's make sure we
+      // account for that.
+      format!("{}\n", EXAMPLE_GEMTEXT),
+    );
+  }
+
+  #[test]
+  fn gemtext_to_ast_then_ast_to_gemtext_macro_simple() {
+    assert_eq!(
+      germ::gemini_to_ast! {
+        => / A link!
+        => / Another link!
+      }
+      .to_gemtext(),
+      format!("{}\n", "=> / A link!\n=> / Another link!"),
+    );
+  }
 }

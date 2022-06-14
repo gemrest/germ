@@ -1,0 +1,31 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package]
+name = "germ"
+version = "0.2.8"
+authors = ["Fuwn <contact@fuwn.me>"]
+edition = "2021"
+description = "The Ultimate Gemini Toolkit."
+documentation = "https://docs.rs/germ"
+readme = "../../../README.md"
+homepage = "https://github.com/gemrest/germ"
+repository = "https://github.com/gemrest/germ"
+license = "GPL-3.0-only"
+keywords = ["gemini", "parser", "lexer", "markdown", "converter"]
+categories = ["encoding"]
+
+[features]
+ast = []
+convert = ["ast"]
+default = ["ast", "convert", "meta", "request"]
+macros = ["ast", "convert", "meta"]
+meta = []
+request = ["rustls", "url", "anyhow"]
+
+[dependencies]
+anyhow = { version = "1.0.57", optional = true } # `Result`
+germ-macros-impl = { path = "../germ-macros-impl" } # Germ's Macro Implementations
+rustls = { version = "0.20.5", features = [
+  "dangerous_configuration"
+], optional = true } # TLS
+url = { version = "2.2.2", optional = true } # URL Validation
