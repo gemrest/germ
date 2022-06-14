@@ -18,9 +18,9 @@
 
 //! Macros to aid with various Germ-related functionalities.
 
-/// Convert a Gemini token tree into an `Ast`
+/// Convert Gemtext an `Ast`
 ///
-/// # Example
+/// # Examples
 ///
 /// ```rust
 /// // Using a value
