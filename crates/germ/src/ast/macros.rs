@@ -16,8 +16,6 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-//! Macros to aid with various Germ-related functionalities.
-
 /// Convert Gemtext an `Ast`
 ///
 /// # Examples
