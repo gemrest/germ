@@ -364,7 +364,11 @@ impl Ast {
 
           list_items.push(line.get(1..).unwrap_or("").trim_start().to_string());
 
-          line = lines.next().unwrap();
+          if let Some(next_line) = lines.next() {
+            line = next_line;
+          } else {
+            break;
+          }
         }
         ">" => {
           // If the Gemtext line starts with an ">", it is a blockquote, so
