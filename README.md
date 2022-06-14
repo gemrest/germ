@@ -44,6 +44,7 @@ features = ["ast"] # Enable the features you would like to use!
 | `convert` | Convert from Gemtext to markup formats such as HTML or Markdown. |
 | `request` | Make Gemini requests and get sane, structured results.           |
 | `meta`    | Structure-ize a Gemini response's meta section                   |
+| `macros`  | Macros to aid with various Germ-related functionalities          |
 
 ### Examples
 
