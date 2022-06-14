@@ -24,7 +24,7 @@ request = ["rustls", "url", "anyhow"]
 
 [dependencies]
 anyhow = { version = "1.0.57", optional = true } # `Result`
-germ-macros-impl = { path = "../germ-macros-impl" } # Germ's Macro Implementations
+germ-macros-impl = { path = "../germ-macros-impl", version = "0.1.0" } # Germ's Macro Implementations
 rustls = { version = "0.20.5", features = [
   "dangerous_configuration"
 ], optional = true } # TLS
