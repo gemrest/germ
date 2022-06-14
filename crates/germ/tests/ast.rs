@@ -108,7 +108,7 @@ That was a link without text."#;
   }
 
   #[test]
-  fn gemtext_to_ast_then_ast_to_gemtext_macro() {
+  fn gemtext_to_ast_then_ast_to_gemtext_macro_expression() {
     assert_eq!(
       germ::gemini_to_ast!(EXAMPLE_GEMTEXT).to_gemtext(),
       // `to_gemtext` appends a newline to all responses, so let's make sure we
@@ -118,7 +118,7 @@ That was a link without text."#;
   }
 
   #[test]
-  fn gemtext_to_ast_then_ast_to_gemtext_macro_simple() {
+  fn gemtext_to_ast_then_ast_to_gemtext_macro_block() {
     assert_eq!(
       germ::gemini_to_ast! {
         => / A link!

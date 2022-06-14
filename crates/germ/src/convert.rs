@@ -23,6 +23,9 @@ use crate::ast::Ast;
 mod html;
 mod markdown;
 
+#[cfg(feature = "macros")]
+mod macros;
+
 /// Different targets to convert Gemtext to
 pub enum Target {
   /// Convert Gemtext to HTML
