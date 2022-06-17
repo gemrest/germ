@@ -27,7 +27,7 @@
   clippy::nursery,
   clippy::pedantic
 )]
-#![doc = include_str!("../../../../README.md")]
+#![doc = include_str!("../../../README.md")]
 #![recursion_limit = "128"]
 
 #[cfg(feature = "ast")]
@@ -41,3 +41,6 @@ pub mod request;
 
 #[cfg(feature = "meta")]
 pub mod meta;
+
+#[cfg(feature = "quick")]
+pub mod quick;
