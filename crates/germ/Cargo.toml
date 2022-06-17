@@ -2,7 +2,7 @@
 
 [package]
 name = "germ"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Fuwn <contact@fuwn.me>"]
 edition = "2021"
 description = "The Ultimate Gemini Toolkit."
@@ -21,6 +21,7 @@ default = ["ast", "convert", "meta", "request"]
 macros = ["ast", "convert"]
 meta = []
 request = ["rustls", "url", "anyhow"]
+quick = []
 
 [dependencies]
 anyhow = { version = "1.0.57", optional = true } # `Result`
