@@ -27,7 +27,6 @@
   clippy::nursery,
   clippy::pedantic
 )]
-#![doc = include_str!("../../README.md")]
 #![recursion_limit = "128"]
 
 #[cfg(feature = "ast")]
