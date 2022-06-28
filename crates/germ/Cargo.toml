@@ -2,7 +2,7 @@
 
 [package]
 name = "germ"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Fuwn <contact@fuwn.me>"]
 edition = "2021"
 description = "The Ultimate Gemini Toolkit."
@@ -18,14 +18,14 @@ categories = ["encoding"]
 ast = []
 convert = ["ast"]
 default = ["ast", "convert", "meta", "request"]
-macros = ["ast", "convert"]
+macros = ["ast", "convert", "germ-macros-impl"]
 meta = []
 request = ["rustls", "url", "anyhow"]
 quick = []
 
 [dependencies]
 anyhow = { version = "1.0.57", optional = true } # `Result`
-germ-macros-impl = { path = "../germ-macros-impl", version = "0.1.0" } # Germ's Macro Implementations
+germ-macros-impl = { path = "../germ-macros-impl", version = "0.1.0", optional = true } # Germ's Macro Implementations
 rustls = { version = "0.20.5", features = [
   "dangerous_configuration"
 ], optional = true } # TLS
