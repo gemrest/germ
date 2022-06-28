@@ -2,12 +2,12 @@
 
 [package]
 name = "germ-macros-impl"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Fuwn <contact@fuwn.me>"]
 edition = "2021"
 description = "Germ Macro Implementations"
 documentation = "https://docs.rs/germ"
-readme = "../../README.md"
+readme = "../README.md"
 homepage = "https://github.com/gemrest/germ"
 repository = "https://github.com/gemrest/germ"
 license = "GPL-3.0-only"
