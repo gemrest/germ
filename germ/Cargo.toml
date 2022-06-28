@@ -2,12 +2,12 @@
 
 [package]
 name = "germ"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Fuwn <contact@fuwn.me>"]
 edition = "2021"
 description = "The Ultimate Gemini Toolkit."
 documentation = "https://docs.rs/germ"
-readme = "../../README.md"
+readme = "../README.md"
 homepage = "https://github.com/gemrest/germ"
 repository = "https://github.com/gemrest/germ"
 license = "GPL-3.0-only"
