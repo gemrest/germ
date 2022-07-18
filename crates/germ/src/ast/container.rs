@@ -258,7 +258,11 @@ impl Ast {
             // preformatted blocks content and increment the line.
             preformatted.push_str(&format!("{}\n", line));
 
-            line = lines.next().unwrap();
+            if let Some(next_line) = lines.next() {
+              line = next_line;
+            } else {
+              break;
+            }
           } else {
             // If we are in a list item and hit a catchall, that must mean that
             // we encountered a line which is not a list line, so
