@@ -232,7 +232,12 @@ impl Ast {
 
           if *in_preformatted {
             alt_text = line.get(3..).unwrap_or("").to_string();
-            line = lines.next().unwrap();
+
+            if let Some(next_line) = lines.next() {
+              line = next_line;
+            } else {
+              break;
+            }
           } else {
             nodes.push(Node::PreformattedText {
               alt_text: if alt_text.is_empty() {
