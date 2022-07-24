@@ -27,6 +27,7 @@ mod markdown;
 mod macros;
 
 /// Different targets to convert Gemtext to
+#[derive(Clone)]
 pub enum Target {
   /// Convert Gemtext to HTML
   HTML,

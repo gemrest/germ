@@ -26,7 +26,7 @@
 /// - [Gemtext Documentation](https://gemini.circumlunar.space/docs/gemtext.gmi)
 /// - [Gemtext Cheatsheet](https://gemini.circumlunar.space/docs/cheatsheet.gmi).
 /// - [Gemini Specification](https://gemini.circumlunar.space/docs/specification.gmi).
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Node {
   /// A text line
   ///

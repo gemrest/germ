@@ -25,9 +25,11 @@ use super::Node;
 /// ```rust
 /// let _ = germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#);
 /// ```
+#[derive(Clone)]
 pub struct Ast {
   inner: Vec<Node>,
 }
+
 impl Ast {
   /// Build an AST tree from Gemtext.
   ///
