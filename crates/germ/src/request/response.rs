@@ -20,7 +20,7 @@ use rustls::SupportedCipherSuite;
 
 use crate::request::Status;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Response {
   status:  Status,
   meta:    String,
@@ -28,6 +28,7 @@ pub struct Response {
   size:    usize,
   suite:   Option<SupportedCipherSuite>,
 }
+
 impl Response {
   pub(super) fn new(data: &[u8], suite: Option<SupportedCipherSuite>) -> Self {
     let string_form = String::from_utf8_lossy(data).to_string();

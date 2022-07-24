@@ -20,13 +20,14 @@ use std::collections::HashMap;
 
 /// Structure-ize a Gemini response's meta section into it's mime type and it's
 /// parameters.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Meta {
   /// The mime type of a Gemini response
   mime:       String,
   /// The parameters of a Gemini response
   parameters: HashMap<String, String>,
 }
+
 impl ToString for Meta {
   /// Convert a `Meta` into a `String`
   ///
@@ -58,6 +59,7 @@ impl ToString for Meta {
     })
   }
 }
+
 impl Meta {
   /// Create a new `Meta`
   ///
