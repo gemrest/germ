@@ -1,10 +1,13 @@
 # Rust
-target/
+target
 Cargo.lock
 
-# IDE
-.idea/
+# CLion
+.idea
 
 # Artifacts
 examples/*.md
 examples/*.html
+
+# Visual Studio Code
+.vscode
