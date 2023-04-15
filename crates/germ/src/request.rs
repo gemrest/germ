@@ -60,7 +60,7 @@ pub fn request(url: &url::Url) -> anyhow::Result<Response> {
   ))?;
   let mut tls = rustls::Stream::new(&mut connection, &mut stream);
 
-  tls.write_all(format!("{}\r\n", url).as_bytes())?;
+  tls.write_all(format!("{url}\r\n").as_bytes())?;
 
   let mut plain_text = Vec::new();
 

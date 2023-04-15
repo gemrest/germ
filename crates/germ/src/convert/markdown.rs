@@ -25,14 +25,14 @@ pub fn convert(source: &[Node]) -> String {
   // this AST tree to an alternative markup format.
   for node in source {
     match node {
-      Node::Text(text) => markdown.push_str(&format!("{}\n", text)),
+      Node::Text(text) => markdown.push_str(&format!("{text}\n")),
       Node::Link {
         to,
         text,
       } =>
-        markdown.push_str(&*text.clone().map_or_else(
-          || format!("<{}>\n", to),
-          |text| format!("[{}]({})\n", text, to),
+        markdown.push_str(&text.clone().map_or_else(
+          || format!("<{to}>\n"),
+          |text| format!("[{text}]({to})\n"),
         )),
       Node::Heading {
         level,
@@ -54,18 +54,18 @@ pub fn convert(source: &[Node]) -> String {
           "{}\n",
           items
             .iter()
-            .map(|i| format!("- {}", i))
+            .map(|i| format!("- {i}"))
             .collect::<Vec<String>>()
             .join("\n"),
         )),
-      Node::Blockquote(text) => markdown.push_str(&format!("> {}\n", text)),
+      Node::Blockquote(text) => markdown.push_str(&format!("> {text}\n")),
       Node::PreformattedText {
         alt_text,
         text,
       } => {
         markdown.push_str(&format!(
           "```{}\n{}```\n",
-          alt_text.clone().unwrap_or_else(|| "".to_string()),
+          alt_text.clone().unwrap_or_default(),
           text
         ));
       }

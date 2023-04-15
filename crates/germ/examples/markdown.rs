@@ -47,7 +47,7 @@ That was a link without text."#;
 
 fn main() {
   std::fs::write(
-    "examples/convert.md",
+    "crates/germ/examples/convert.md",
     germ::convert::from_string(
       EXAMPLE_GEMTEXT,
       &germ::convert::Target::Markdown,
