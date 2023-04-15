@@ -28,7 +28,7 @@ use std::{fmt, fmt::Formatter};
 /// assert_eq!(Status::from(10), Status::Input);
 /// assert_eq!(i32::from(Status::Input), 10);
 /// ```
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Eq)]
 pub enum Status {
   Input,
   SensitiveInput,
@@ -108,7 +108,5 @@ impl From<i32> for Status {
 }
 
 impl fmt::Display for Status {
-  fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-    write!(f, "{:?}", self)
-  }
+  fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { write!(f, "{self:?}") }
 }

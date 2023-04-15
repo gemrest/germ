@@ -63,11 +63,11 @@ impl Ast {
 
   #[must_use]
   pub fn to_gemtext(&self) -> String {
-    let mut gemtext = "".to_string();
+    let mut gemtext = String::new();
 
     for node in &self.inner {
       match node {
-        Node::Text(text) => gemtext.push_str(&format!("{}\n", text)),
+        Node::Text(text) => gemtext.push_str(&format!("{text}\n")),
         Node::Link {
           to,
           text,
@@ -77,7 +77,7 @@ impl Ast {
             to,
             text
               .clone()
-              .map_or_else(|| "".to_string(), |text| format!(" {}", text)),
+              .map_or_else(String::new, |text| format!(" {text}")),
           )),
         Node::Heading {
           level,
@@ -98,18 +98,18 @@ impl Ast {
             "{}\n",
             items
               .iter()
-              .map(|i| format!("* {}", i))
+              .map(|i| format!("* {i}"))
               .collect::<Vec<String>>()
               .join("\n"),
           )),
-        Node::Blockquote(text) => gemtext.push_str(&format!("> {}\n", text)),
+        Node::Blockquote(text) => gemtext.push_str(&format!("> {text}\n")),
         Node::PreformattedText {
           alt_text,
           text,
         } =>
           gemtext.push_str(&format!(
             "```{}\n{}```\n",
-            alt_text.clone().unwrap_or_else(|| "".to_string()),
+            alt_text.clone().unwrap_or_default(),
             text
           )),
         Node::Whitespace => gemtext.push('\n'),
@@ -177,19 +177,16 @@ impl Ast {
         "#" => {
           // If the Gemtext line starts with an "#", it is a heading, so let's
           // find out how deep it goes.
-          let level = match line.get(0..3) {
-            Some(root) =>
-              if root.contains("###") {
-                3
-              } else if root.contains("##") {
-                2
-              } else if root.contains('#') {
-                1
-              } else {
-                0
-              },
-            None => 0,
-          };
+          let level = line.get(0..3).map_or(0, |root| {
+            if root.contains("###") {
+              3
+            } else if root.contains("##") {
+              2
+            } else {
+              // Converting the boolean response of `contains` to an integer
+              usize::from(root.contains('#'))
+            }
+          });
 
           nodes.push(Node::Heading {
             level,
@@ -263,7 +260,7 @@ impl Ast {
           if *in_preformatted {
             // If we are in a preformatted line context, add the line to the
             // preformatted blocks content and increment the line.
-            preformatted.push_str(&format!("{}\n", line));
+            preformatted.push_str(&format!("{line}\n"));
 
             if let Some(next_line) = lines.next() {
               line = next_line;

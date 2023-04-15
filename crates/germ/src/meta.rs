@@ -52,7 +52,7 @@ impl ToString for Meta {
       parameters.reverse();
 
       if parameters.is_empty() {
-        "".to_string()
+        String::new()
       } else {
         format!("; {}", parameters.join("; "))
       }

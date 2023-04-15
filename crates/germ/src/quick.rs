@@ -36,7 +36,7 @@ pub fn heading(text: &str, level: &HeadingLevel) -> String {
 }
 
 #[must_use]
-pub fn list_item(text: &str) -> String { format!("* {}", text) }
+pub fn list_item(text: &str) -> String { format!("* {text}") }
 
 #[must_use]
 pub fn list_items(items: &[&str]) -> String {
@@ -52,12 +52,12 @@ pub fn link(text: &str, location: Option<&str>) -> String {
   format!(
     "=> {}{}",
     text,
-    location.map_or_else(|| "".to_string(), |l| format!(" {}", l))
+    location.map_or_else(String::new, |l| format!(" {l}"))
   )
 }
 
 #[must_use]
-pub fn block_quote(text: &str) -> String { format!("> {}", text) }
+pub fn block_quote(text: &str) -> String { format!("> {text}") }
 
 #[must_use]
 pub fn preformatted_text(text: &str, alt_text: Option<&str>) -> String {

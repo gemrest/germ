@@ -25,7 +25,7 @@ pub fn convert(source: &[Node]) -> String {
   // this AST tree to an alternative markup format.
   for node in source {
     match node {
-      Node::Text(text) => html.push_str(&format!("<p>{}</p>", text)),
+      Node::Text(text) => html.push_str(&format!("<p>{text}</p>")),
       Node::Link {
         to,
         text,
@@ -56,16 +56,16 @@ pub fn convert(source: &[Node]) -> String {
           "<ul>{}</ul>",
           items
             .iter()
-            .map(|i| format!("<li>{}</li>", i))
+            .map(|i| format!("<li>{i}</li>"))
             .collect::<Vec<String>>()
             .join("\n")
         )),
       Node::Blockquote(text) =>
-        html.push_str(&format!("<blockquote>{}</blockquote>", text)),
+        html.push_str(&format!("<blockquote>{text}</blockquote>")),
       Node::PreformattedText {
         text, ..
       } => {
-        html.push_str(&format!("<pre>{}</pre>", text));
+        html.push_str(&format!("<pre>{text}</pre>"));
       }
       Node::Whitespace => {}
     }
