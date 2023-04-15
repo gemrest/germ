@@ -5,9 +5,5 @@ Cargo.lock
 # CLion
 .idea
 
-# Artifacts
-examples/*.md
-examples/*.html
-
 # Visual Studio Code
 .vscode
