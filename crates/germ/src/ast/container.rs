@@ -31,7 +31,7 @@ pub struct Ast {
 }
 
 impl Ast {
-  /// Build an AST tree from Gemtext.
+  /// Build an AST tree from Gemtext
   ///
   /// # Example
   ///
@@ -39,10 +39,36 @@ impl Ast {
   /// let _ = germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#);
   /// ```
   #[must_use]
-  pub fn from_string(source: &str) -> Self {
+  pub fn from_owned(value: &(impl AsRef<str> + ?Sized)) -> Self {
+    Self::from_value(value.as_ref())
+  }
+
+  /// Build an AST tree from Gemtext
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// let _ = germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#);
+  /// ```
+  #[must_use]
+  #[allow(clippy::needless_pass_by_value)]
+  pub fn from_string(value: (impl Into<String> + ?Sized)) -> Self {
+    Self::from_value(&value.into())
+  }
+
+  /// Build an AST tree from a value
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// let _ = germ::ast::Ast::from_value(r#"=> gemini://gem.rest/ GemRest"#);
+  /// ```
+  #[must_use]
+  pub fn from_value(value: &(impl ToString + ?Sized)) -> Self {
     let mut ast = vec![];
     let mut in_preformatted = false;
     let mut in_list = false;
+    let source = value.to_string();
     let mut lines = source.lines();
 
     // Iterate over all lines in the Gemtext `source`
