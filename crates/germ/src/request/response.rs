@@ -41,7 +41,7 @@ impl Response {
       let mut string_split = string_form.split("\r\n");
 
       header = string_split.next().unwrap_or("").to_string();
-      content = Some(string_split.collect());
+      content = Some(string_split.map(|s| format!("{s}\r\n")).collect());
     }
 
     let header_split = header.split_at(2);
