@@ -24,7 +24,7 @@ request = ["rustls", "url", "anyhow"]
 quick = []
 
 [dependencies]
-anyhow = { version = "1.0.57", optional = true } # `Result`
+anyhow = { version = "1.0.70", optional = true } # `Result`
 germ-macros-impl = { path = "../germ-macros-impl", version = "0.1.0", optional = true } # Germ's Macro Implementations
 rustls = { version = "0.21.0", features = [
   "dangerous_configuration"
