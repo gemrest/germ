@@ -22,11 +22,14 @@ mod response;
 mod status;
 mod verifier;
 
+#[cfg(feature = "sync")]
+pub mod sync;
+
 use std::io::{Read, Write};
 
 pub use response::Response;
 pub use status::Status;
-use verifier::GermVerifier;
+pub(crate) use verifier::GermVerifier;
 
 /// Make a request to a Gemini server. The `url` **should** be prefixed with a
 /// scheme (e.g. "gemini://").

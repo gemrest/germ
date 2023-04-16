@@ -47,6 +47,7 @@ features = ["ast"] # Enable the features you would like to use!
 | `meta`    | Structure-ize a Gemini response's meta section                   |
 | `macros`  | Macros to aid with various Germ-related functionalities          |
 | `quick`   | Quick functions to create valid Gemtext elements from input      |
+| `sync`    | An asynchronous version of `request`                             |
 
 ### Examples
 
