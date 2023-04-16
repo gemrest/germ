@@ -23,7 +23,10 @@ pub enum HeadingLevel {
 }
 
 #[must_use]
-pub fn heading(text: &str, level: &HeadingLevel) -> String {
+pub fn heading(
+  text: &(impl ToString + ?Sized),
+  level: &HeadingLevel,
+) -> String {
   format!(
     "{} {}",
     match level {
@@ -31,35 +34,42 @@ pub fn heading(text: &str, level: &HeadingLevel) -> String {
       HeadingLevel::Two => "##",
       HeadingLevel::Three => "###",
     },
-    text
+    text.to_string()
   )
 }
 
 #[must_use]
-pub fn list_item(text: &str) -> String { format!("* {text}") }
+pub fn list_item(text: &(impl ToString + ?Sized)) -> String {
+  format!("* {}", text.to_string())
+}
 
 #[must_use]
-pub fn list_items(items: &[&str]) -> String {
+pub fn list_items(items: &[&(impl ToString + ?Sized)]) -> String {
   items
     .iter()
-    .map(|item| list_item(item))
+    .map(|item| list_item(&item.to_string()))
     .collect::<Vec<_>>()
     .join("\n")
 }
 
 #[must_use]
-pub fn link(text: &str, location: Option<&str>) -> String {
+pub fn link(text: &(impl ToString + ?Sized), location: Option<&str>) -> String {
   format!(
     "=> {}{}",
-    text,
+    text.to_string(),
     location.map_or_else(String::new, |l| format!(" {l}"))
   )
 }
 
 #[must_use]
-pub fn block_quote(text: &str) -> String { format!("> {text}") }
+pub fn block_quote(text: &(impl ToString + ?Sized)) -> String {
+  format!("> {}", text.to_string())
+}
 
 #[must_use]
-pub fn preformatted_text(text: &str, alt_text: Option<&str>) -> String {
-  format!("```{}\n{}\n```", alt_text.unwrap_or(""), text)
+pub fn preformatted_text(
+  text: &(impl ToString + ?Sized),
+  alt_text: Option<&str>,
+) -> String {
+  format!("```{}\n{}\n```", alt_text.unwrap_or(""), text.to_string())
 }
