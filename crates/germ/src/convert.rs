@@ -69,5 +69,5 @@ pub fn from_ast(source: &Ast, target: &Target) -> String {
 /// ```
 #[must_use]
 pub fn from_string(source: &str, target: &Target) -> String {
-  from_ast(&Ast::from_string(source), target)
+  from_ast(&Ast::from_owned(&source), target)
 }
