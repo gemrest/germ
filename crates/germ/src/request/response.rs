@@ -32,7 +32,7 @@ pub struct Response {
 }
 
 impl Response {
-  pub(super) fn new(data: &[u8], suite: Option<SupportedCipherSuite>) -> Self {
+  pub(crate) fn new(data: &[u8], suite: Option<SupportedCipherSuite>) -> Self {
     let string_form = String::from_utf8_lossy(data).to_string();
     let mut content = None;
     let header;

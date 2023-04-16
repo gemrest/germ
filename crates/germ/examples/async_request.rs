@@ -16,27 +16,14 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use std::time::SystemTime;
-
-use rustls::{client, client::ServerCertVerified, Certificate};
-
-#[allow(clippy::module_name_repetitions)]
-pub struct GermVerifier;
-
-impl GermVerifier {
-  pub const fn new() -> Self { Self {} }
-}
-
-impl client::ServerCertVerifier for GermVerifier {
-  fn verify_server_cert(
-    &self,
-    _end_entity: &Certificate,
-    _intermediates: &[Certificate],
-    _server_name: &client::ServerName,
-    _scts: &mut dyn Iterator<Item = &[u8]>,
-    _ocsp_response: &[u8],
-    _now: SystemTime,
-  ) -> Result<ServerCertVerified, rustls::Error> {
-    Ok(ServerCertVerified::assertion())
+#[tokio::main]
+async fn main() {
+  match germ::request::sync::request(
+    &url::Url::parse("gemini://fuwn.me").unwrap(),
+  )
+  .await
+  {
+    Ok(response) => println!("{:?}", response),
+    Err(_) => {}
   }
 }
