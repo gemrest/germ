@@ -16,6 +16,8 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
+use std::borrow::Cow;
+
 use rustls::SupportedCipherSuite;
 
 use crate::request::Status;
@@ -59,7 +61,7 @@ impl Response {
   pub const fn status(&self) -> &Status { &self.status }
 
   #[must_use]
-  pub fn meta(&self) -> &str { &self.meta }
+  pub fn meta(&self) -> Cow<'_, str> { Cow::Borrowed(&self.meta) }
 
   #[must_use]
   pub const fn content(&self) -> &Option<String> { &self.content }
