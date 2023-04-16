@@ -68,6 +68,9 @@ pub fn from_ast(source: &Ast, target: &Target) -> String {
 /// );
 /// ```
 #[must_use]
-pub fn from_string(source: &str, target: &Target) -> String {
-  from_ast(&Ast::from_owned(&source), target)
+pub fn from_string(
+  source: &(impl ToString + ?Sized),
+  target: &Target,
+) -> String {
+  from_ast(&Ast::from_owned(&source.to_string()), target)
 }
