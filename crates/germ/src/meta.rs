@@ -82,7 +82,8 @@ impl Meta {
   /// );
   /// ```
   #[must_use]
-  pub fn from_string(meta: &str) -> Self {
+  pub fn from_string(meta: impl Into<std::borrow::Cow<'static, str>>) -> Self {
+    let meta = meta.into().to_string();
     let mut metas = meta.split(';');
     let mime = metas.next().unwrap_or("").to_string();
     let mut parameters = HashMap::new();
