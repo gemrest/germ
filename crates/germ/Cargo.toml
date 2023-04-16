@@ -29,4 +29,4 @@ germ-macros-impl = { path = "../germ-macros-impl", version = "0.1.0", optional =
 rustls = { version = "0.20.5", features = [
   "dangerous_configuration"
 ], optional = true } # TLS
-url = { version = "2.2.2", optional = true } # URL Validation
+url = { version = "2.3.1", optional = true } # URL Validation
