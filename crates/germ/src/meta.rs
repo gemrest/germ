@@ -16,7 +16,7 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 /// Structure-ize a Gemini response's meta section into it's mime type and it's
 /// parameters.
@@ -116,7 +116,7 @@ impl Meta {
   /// );
   /// ```
   #[must_use]
-  pub fn mime(&self) -> &str { &self.mime }
+  pub fn mime(&self) -> Cow<'_, str> { Cow::Borrowed(&self.mime) }
 
   /// Obtain mutable access to the mime of the `Meta`
   ///
