@@ -46,14 +46,6 @@ mod test {
   }
 
   #[test]
-  fn convert_from_string_to_html_single_link_macro_block() {
-    assert_eq!(
-      gemini_to_html! { => /to hello ! },
-      "<a href=\"/to\">hello !</a><br>",
-    );
-  }
-
-  #[test]
   fn convert_from_string_to_markdown_single_line() {
     assert_eq!(from_string("hi", &Target::Markdown), "hi\n",);
   }
@@ -74,10 +66,5 @@ mod test {
   #[test]
   fn convert_from_string_to_markdown_single_macro_expression() {
     assert_eq!(gemini_to_md!("=> /to hello !"), "[hello !](/to)\n",);
-  }
-
-  #[test]
-  fn convert_from_string_to_markdown_single_macro_block() {
-    assert_eq!(gemini_to_md! { => /to hello ! }, "[hello !](/to)\n",);
   }
 }

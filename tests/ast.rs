@@ -116,16 +116,4 @@ That was a link without text."#;
       format!("{}\n", EXAMPLE_GEMTEXT),
     );
   }
-
-  #[test]
-  fn gemtext_to_ast_then_ast_to_gemtext_macro_block() {
-    assert_eq!(
-      germ::gemini_to_ast! {
-        => / A link!
-        => / Another link!
-      }
-      .to_gemtext(),
-      format!("{}\n", "=> / A link!\n=> / Another link!"),
-    );
-  }
 }

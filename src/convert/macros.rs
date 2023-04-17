@@ -16,35 +16,54 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-/// Convert Gemtext an `Ast`
+/// Convert Gemtext into HTML
 ///
 /// # Examples
 ///
 /// ```rust
 /// // Using a value
 /// assert_eq!(
-///   germ::gemini_to_ast!("=> / A link!").to_gemtext(),
-///   // `to_gemtext` appends a newline to all responses, so let's make sure we
-///   // account for that.
-///   format!("{}\n", "=> / A link!"),
+///   germ::gemini_to_html!("=> /to hello !"),
+///   "<a href=\"/to\">hello !</a><br>",
 /// );
-///
-/// /// Using raw Gemtext
-/// assert_eq!(
-///   germ::gemini_to_ast! {
-///     => / A link!
-///     => / Another link!
-///   }
-///   .to_gemtext(),
-///   format!("{}\n", "=> / A link!\n=> / Another link!"),
-/// );
-/// ```
 #[macro_export]
-macro_rules! gemini_to_ast {
+macro_rules! gemini_to_html {
   ($gemini:expr) => {
-    germ::ast::Ast::from_string($gemini)
+    germ::convert::from_ast(
+      &germ::gemini_to_ast!($gemini),
+      &germ::convert::Target::HTML,
+    )
   };
   ($($gemini:tt)*) => {
-    germ::ast::Ast::from_string(germ_macros_impl::gemini_to_tt!($($gemini)*));
+    germ::convert::from_ast(
+      &germ::gemini_to_ast!{ $($gemini)* },
+      &germ::convert::Target::HTML,
+    )
+  };
+}
+
+/// Convert Gemtext into Markdown
+///
+/// # Examples
+///
+/// ```rust
+/// assert_eq!(
+///   // Using a value
+///   germ::gemini_to_md!("=> /to hello !"),
+///   "[hello !](/to)\n",
+/// );
+#[macro_export]
+macro_rules! gemini_to_md {
+  ($gemini:expr) => {
+    germ::convert::from_ast(
+      &germ::gemini_to_ast!($gemini),
+      &germ::convert::Target::Markdown,
+    )
+  };
+  ($($gemini:tt)*) => {
+    germ::convert::from_ast(
+      &germ::gemini_to_ast!{ $($gemini)* },
+      &germ::convert::Target::Markdown,
+    )
   };
 }
