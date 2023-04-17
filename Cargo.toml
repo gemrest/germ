@@ -1,4 +1,39 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = ["crates/germ", "crates/germ-macros-impl"]
+[package]
+name = "germ"
+version = "0.3.8"
+authors = ["Fuwn <contact@fuwn.me>"]
+edition = "2021"
+description = "The Ultimate Gemini Toolkit."
+documentation = "https://docs.rs/germ"
+readme = "README.md"
+homepage = "https://github.com/gemrest/germ"
+repository = "https://github.com/gemrest/germ"
+license = "GPL-3.0-only"
+keywords = ["gemini", "parser", "lexer", "markdown", "converter"]
+categories = ["encoding"]
+
+[features]
+ast = []
+convert = ["ast"]
+default = ["ast", "convert", "meta", "request"]
+macros = ["ast", "convert"]
+meta = []
+request = ["rustls", "url", "anyhow"]
+quick = []
+sync = ["tokio", "tokio-rustls"]
+
+[dependencies]
+anyhow = { version = "1.0.70", optional = true } # `Result`
+rustls = { version = "0.21.0", features = [
+  "dangerous_configuration"
+], optional = true } # TLS
+tokio-rustls = { version = "0.24.0", optional = true } # Non-blocking TLS
+tokio = { version = "1.27.0", optional = true, default-features = false, features = [
+  "net",
+  "io-util",
+  "rt-multi-thread",
+  "macros"
+] } # Non-blocking I/O
+url = { version = "2.3.1", optional = true } # URL Validation

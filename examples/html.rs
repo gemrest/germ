@@ -47,11 +47,8 @@ That was a link without text."#;
 
 fn main() {
   std::fs::write(
-    "crates/germ/examples/convert.md",
-    germ::convert::from_string(
-      EXAMPLE_GEMTEXT,
-      &germ::convert::Target::Markdown,
-    ),
+    "examples/convert.html",
+    germ::convert::from_string(EXAMPLE_GEMTEXT, &germ::convert::Target::HTML),
   )
   .expect("could not write to file");
 }
