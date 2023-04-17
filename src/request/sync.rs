@@ -27,11 +27,16 @@ use crate::request::Response;
 /// # Example
 ///
 /// ```rust
-/// match germ::request::request(&url::Url::parse("gemini://fuwn.me").unwrap())
+/// #[tokio::main]
+/// async fn main() {
+///   match germ::request::sync::request(
+///     &url::Url::parse("gemini://fuwn.me").unwrap(),
+///   )
 ///   .await
-/// {
-///   Ok(response) => println!("{:?}", response),
-///   Err(_) => {}
+///   {
+///     Ok(response) => println!("{:?}", response),
+///     Err(_) => {}
+///   }
 /// }
 /// ```
 ///
