@@ -31,6 +31,6 @@
 #[macro_export]
 macro_rules! gemini_to_ast {
   ($gemini:expr) => {
-    germ::ast::Ast::from_string($gemini)
+    $crate::ast::Ast::from_string($gemini)
   };
 }

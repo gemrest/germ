@@ -29,15 +29,15 @@
 #[macro_export]
 macro_rules! gemini_to_html {
   ($gemini:expr) => {
-    germ::convert::from_ast(
-      &germ::gemini_to_ast!($gemini),
-      &germ::convert::Target::HTML,
+    $crate::convert::from_ast(
+      &$crate::gemini_to_ast!($gemini),
+      &$crate::convert::Target::HTML,
     )
   };
   ($($gemini:tt)*) => {
-    germ::convert::from_ast(
-      &germ::gemini_to_ast!{ $($gemini)* },
-      &germ::convert::Target::HTML,
+    $crate::convert::from_ast(
+      &$crate::gemini_to_ast!{ $($gemini)* },
+      &$crate::convert::Target::HTML,
     )
   };
 }
@@ -55,15 +55,15 @@ macro_rules! gemini_to_html {
 #[macro_export]
 macro_rules! gemini_to_md {
   ($gemini:expr) => {
-    germ::convert::from_ast(
-      &germ::gemini_to_ast!($gemini),
-      &germ::convert::Target::Markdown,
+    $crate::convert::from_ast(
+      &$crate::gemini_to_ast!($gemini),
+      &$crate::convert::Target::Markdown,
     )
   };
   ($($gemini:tt)*) => {
-    germ::convert::from_ast(
-      &germ::gemini_to_ast!{ $($gemini)* },
-      &germ::convert::Target::Markdown,
+    $crate::convert::from_ast(
+      &$crate::gemini_to_ast!{ $($gemini)* },
+      &$crate::convert::Target::Markdown,
     )
   };
 }
