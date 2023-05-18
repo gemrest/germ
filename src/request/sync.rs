@@ -16,9 +16,10 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-
-use crate::request::Response;
+use {
+  crate::request::Response,
+  tokio::io::{AsyncReadExt, AsyncWriteExt},
+};
 
 /// Make a request to a Gemini server
 ///

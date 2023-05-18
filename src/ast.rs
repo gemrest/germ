@@ -21,8 +21,6 @@
 mod container;
 mod node;
 
-#[cfg(feature = "macros")]
-mod macros;
+#[cfg(feature = "macros")] mod macros;
 
-pub use container::Ast;
-pub use node::Node;
+pub use {container::Ast, node::Node};

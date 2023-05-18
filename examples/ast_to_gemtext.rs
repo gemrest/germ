@@ -46,8 +46,5 @@ This is more text after a blank line.
 That was a link without text."#;
 
 fn main() {
-  println!(
-    "{}",
-    germ::ast::Ast::from_string(EXAMPLE_GEMTEXT).to_gemtext()
-  );
+  println!("{}", germ::ast::Ast::from_string(EXAMPLE_GEMTEXT).to_gemtext());
 }

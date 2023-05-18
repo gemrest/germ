@@ -26,18 +26,11 @@ pub fn convert(source: &[Node]) -> String {
   for node in source {
     match node {
       Node::Text(text) => markdown.push_str(&format!("{text}\n")),
-      Node::Link {
-        to,
-        text,
-      } =>
-        markdown.push_str(&text.clone().map_or_else(
-          || format!("<{to}>\n"),
-          |text| format!("[{text}]({to})\n"),
-        )),
-      Node::Heading {
-        level,
-        text,
-      } => {
+      Node::Link { to, text } => markdown.push_str(&text.clone().map_or_else(
+        || format!("<{to}>\n"),
+        |text| format!("[{text}]({to})\n"),
+      )),
+      Node::Heading { level, text } => {
         markdown.push_str(&format!(
           "{} {}\n",
           match level {
@@ -49,20 +42,16 @@ pub fn convert(source: &[Node]) -> String {
           text
         ));
       }
-      Node::List(items) =>
-        markdown.push_str(&format!(
-          "{}\n",
-          items
-            .iter()
-            .map(|i| format!("- {i}"))
-            .collect::<Vec<String>>()
-            .join("\n"),
-        )),
+      Node::List(items) => markdown.push_str(&format!(
+        "{}\n",
+        items
+          .iter()
+          .map(|i| format!("- {i}"))
+          .collect::<Vec<String>>()
+          .join("\n"),
+      )),
       Node::Blockquote(text) => markdown.push_str(&format!("> {text}\n")),
-      Node::PreformattedText {
-        alt_text,
-        text,
-      } => {
+      Node::PreformattedText { alt_text, text } => {
         markdown.push_str(&format!(
           "```{}\n{}```\n",
           alt_text.clone().unwrap_or_default(),

@@ -82,9 +82,7 @@ impl Ast {
       ));
     }
 
-    Self {
-      inner: ast
-    }
+    Self { inner: ast }
   }
 
   #[must_use]
@@ -94,45 +92,31 @@ impl Ast {
     for node in &self.inner {
       match node {
         Node::Text(text) => gemtext.push_str(&format!("{text}\n")),
-        Node::Link {
+        Node::Link { to, text } => gemtext.push_str(&format!(
+          "=> {}{}\n",
           to,
-          text,
-        } =>
-          gemtext.push_str(&format!(
-            "=> {}{}\n",
-            to,
-            text
-              .clone()
-              .map_or_else(String::new, |text| format!(" {text}")),
-          )),
-        Node::Heading {
-          level,
-          text,
-        } =>
-          gemtext.push_str(&format!(
-            "{} {}\n",
-            match level {
-              1 => "#",
-              2 => "##",
-              3 => "###",
-              _ => "",
-            },
-            text
-          )),
-        Node::List(items) =>
-          gemtext.push_str(&format!(
-            "{}\n",
-            items
-              .iter()
-              .map(|i| format!("* {i}"))
-              .collect::<Vec<String>>()
-              .join("\n"),
-          )),
+          text.clone().map_or_else(String::new, |text| format!(" {text}")),
+        )),
+        Node::Heading { level, text } => gemtext.push_str(&format!(
+          "{} {}\n",
+          match level {
+            1 => "#",
+            2 => "##",
+            3 => "###",
+            _ => "",
+          },
+          text
+        )),
+        Node::List(items) => gemtext.push_str(&format!(
+          "{}\n",
+          items
+            .iter()
+            .map(|i| format!("* {i}"))
+            .collect::<Vec<String>>()
+            .join("\n"),
+        )),
         Node::Blockquote(text) => gemtext.push_str(&format!("> {text}\n")),
-        Node::PreformattedText {
-          alt_text,
-          text,
-        } =>
+        Node::PreformattedText { alt_text, text } =>
           gemtext.push_str(&format!(
             "```{}\n{}```\n",
             alt_text.clone().unwrap_or_default(),
@@ -190,11 +174,7 @@ impl Ast {
             text: {
               let rest = split.collect::<Vec<String>>().join(" ");
 
-              if rest.is_empty() {
-                None
-              } else {
-                Some(rest)
-              }
+              if rest.is_empty() { None } else { Some(rest) }
             },
           });
 
@@ -263,11 +243,7 @@ impl Ast {
             }
           } else {
             nodes.push(Node::PreformattedText {
-              alt_text: if alt_text.is_empty() {
-                None
-              } else {
-                Some(alt_text)
-              },
+              alt_text: if alt_text.is_empty() { None } else { Some(alt_text) },
               text:     preformatted,
             });
 

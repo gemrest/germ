@@ -16,9 +16,10 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use std::time::SystemTime;
-
-use rustls::{client, client::ServerCertVerified, Certificate};
+use {
+  rustls::{client, client::ServerCertVerified, Certificate},
+  std::time::SystemTime,
+};
 
 #[allow(clippy::module_name_repetitions)]
 pub struct GermVerifier;

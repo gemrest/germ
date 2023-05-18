@@ -16,11 +16,7 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use std::borrow::Cow;
-
-use rustls::SupportedCipherSuite;
-
-use crate::request::Status;
+use {crate::request::Status, rustls::SupportedCipherSuite, std::borrow::Cow};
 
 #[derive(Debug, Clone)]
 pub struct Response {

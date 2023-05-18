@@ -20,8 +20,7 @@
 mod test {
   use germ::{
     convert::{from_string, Target},
-    gemini_to_html,
-    gemini_to_md,
+    gemini_to_html, gemini_to_md,
   };
 
   #[test]
@@ -31,10 +30,7 @@ mod test {
 
   #[test]
   fn convert_from_string_to_html_multi_line() {
-    assert_eq!(
-      from_string("hi\n# hi", &Target::HTML),
-      "<p>hi</p><h1>hi</h1>",
-    );
+    assert_eq!(from_string("hi\n# hi", &Target::HTML), "<p>hi</p><h1>hi</h1>",);
   }
 
   #[test]
