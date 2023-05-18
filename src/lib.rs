@@ -29,17 +29,12 @@
 )]
 #![recursion_limit = "128"]
 
-#[cfg(feature = "ast")]
-pub mod ast;
+#[cfg(feature = "ast")] pub mod ast;
 
-#[cfg(feature = "convert")]
-pub mod convert;
+#[cfg(feature = "convert")] pub mod convert;
 
-#[cfg(feature = "request")]
-pub mod request;
+#[cfg(feature = "request")] pub mod request;
 
-#[cfg(feature = "meta")]
-pub mod meta;
+#[cfg(feature = "meta")] pub mod meta;
 
-#[cfg(feature = "quick")]
-pub mod quick;
+#[cfg(feature = "quick")] pub mod quick;

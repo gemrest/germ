@@ -23,8 +23,7 @@ use crate::ast::Ast;
 mod html;
 mod markdown;
 
-#[cfg(feature = "macros")]
-mod macros;
+#[cfg(feature = "macros")] mod macros;
 
 /// Different targets to convert Gemtext to
 #[derive(Clone)]

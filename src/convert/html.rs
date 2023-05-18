@@ -26,20 +26,14 @@ pub fn convert(source: &[Node]) -> String {
   for node in source {
     match node {
       Node::Text(text) => html.push_str(&format!("<p>{text}</p>")),
-      Node::Link {
-        to,
-        text,
-      } => {
+      Node::Link { to, text } => {
         html.push_str(&format!(
           "<a href=\"{}\">{}</a><br>",
           to,
           text.clone().unwrap_or_else(|| to.clone())
         ));
       }
-      Node::Heading {
-        level,
-        text,
-      } => {
+      Node::Heading { level, text } => {
         html.push_str(&format!(
           "<{}>{}</{0}>",
           match level {
@@ -51,20 +45,17 @@ pub fn convert(source: &[Node]) -> String {
           text
         ));
       }
-      Node::List(items) =>
-        html.push_str(&format!(
-          "<ul>{}</ul>",
-          items
-            .iter()
-            .map(|i| format!("<li>{i}</li>"))
-            .collect::<Vec<String>>()
-            .join("\n")
-        )),
+      Node::List(items) => html.push_str(&format!(
+        "<ul>{}</ul>",
+        items
+          .iter()
+          .map(|i| format!("<li>{i}</li>"))
+          .collect::<Vec<String>>()
+          .join("\n")
+      )),
       Node::Blockquote(text) =>
         html.push_str(&format!("<blockquote>{text}</blockquote>")),
-      Node::PreformattedText {
-        text, ..
-      } => {
+      Node::PreformattedText { text, .. } => {
         html.push_str(&format!("<pre>{text}</pre>"));
       }
       Node::Whitespace => {}

@@ -22,14 +22,12 @@ mod response;
 mod status;
 mod verifier;
 
-#[cfg(feature = "sync")]
-pub mod sync;
+#[cfg(feature = "sync")] pub mod sync;
 
 use std::io::{Read, Write};
 
-pub use response::Response;
-pub use status::Status;
 pub(crate) use verifier::GermVerifier;
+pub use {response::Response, status::Status};
 
 /// Make a request to a Gemini server. The `url` **should** be prefixed with a
 /// scheme (e.g. "gemini://").
@@ -69,8 +67,5 @@ pub fn request(url: &url::Url) -> anyhow::Result<Response> {
 
   tls.read_to_end(&mut plain_text)?;
 
-  Ok(Response::new(
-    &plain_text,
-    tls.conn.negotiated_cipher_suite(),
-  ))
+  Ok(Response::new(&plain_text, tls.conn.negotiated_cipher_suite()))
 }

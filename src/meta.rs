@@ -89,9 +89,8 @@ impl Meta {
     let mut parameters = HashMap::new();
 
     for parameter in metas {
-      let key_value = parameter
-        .trim_start()
-        .split_at(parameter.find('=').unwrap_or(0));
+      let key_value =
+        parameter.trim_start().split_at(parameter.find('=').unwrap_or(0));
 
       parameters.insert(
         key_value.0.to_string().replace('=', ""),
@@ -99,10 +98,7 @@ impl Meta {
       );
     }
 
-    Self {
-      mime,
-      parameters,
-    }
+    Self { mime, parameters }
   }
 
   /// Obtain non-mutable access to the mime of the `Meta`

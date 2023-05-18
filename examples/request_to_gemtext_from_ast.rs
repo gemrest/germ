@@ -18,14 +18,13 @@
 
 fn main() {
   match germ::request::request(&url::Url::parse("gemini://fuwn.me/").unwrap()) {
-    Ok(response) =>
-      println!(
-        "{}",
-        germ::ast::Ast::from_string(
-          &*response.content().clone().unwrap_or_else(|| "".to_string())
-        )
-        .to_gemtext()
-      ),
+    Ok(response) => println!(
+      "{}",
+      germ::ast::Ast::from_string(
+        &*response.content().clone().unwrap_or_else(|| "".to_string())
+      )
+      .to_gemtext()
+    ),
     Err(_) => {}
   }
 }
