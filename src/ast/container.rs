@@ -251,9 +251,13 @@ impl Ast {
           }
         }
         "" if !*in_preformatted => {
-          // If the line has nothing on it, it is a whitespace line, as long as
-          // we aren't in a preformatted line context.
-          nodes.push(Node::Whitespace);
+          if line.is_empty() {
+            // If the line has nothing on it, it is a whitespace line, as long
+            // as we aren't in a preformatted line context.
+            nodes.push(Node::Whitespace);
+          } else {
+            nodes.push(Node::Text(line.to_string()));
+          }
 
           break;
         }
