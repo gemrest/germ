@@ -2,7 +2,7 @@
 
 [package]
 name = "germ"
-version = "0.3.10"
+version = "0.3.11"
 authors = ["Fuwn <contact@fuwn.me>"]
 edition = "2021"
 description = "The Ultimate Gemini Toolkit."
@@ -27,13 +27,13 @@ sync = ["tokio", "tokio-rustls"]
 [dependencies]
 anyhow = { version = "1.0.70", optional = true } # `Result`
 rustls = { version = "0.21.0", features = [
-  "dangerous_configuration"
+  "dangerous_configuration",
 ], optional = true } # TLS
 tokio-rustls = { version = "0.24.0", optional = true } # Non-blocking TLS
 tokio = { version = "1.27.0", optional = true, default-features = false, features = [
   "net",
   "io-util",
   "rt-multi-thread",
-  "macros"
+  "macros",
 ] } # Non-blocking I/O
 url = { version = "2.3.1", optional = true } # URL Validation
