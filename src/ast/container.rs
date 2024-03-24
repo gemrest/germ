@@ -183,16 +183,15 @@ impl Ast {
         "#" => {
           // If the Gemtext line starts with an "#", it is a heading, so let's
           // find out how deep it goes.
-          let level = line.get(0..3).map_or(0, |root| {
-            if root.contains("###") {
-              3
-            } else if root.contains("##") {
-              2
-            } else {
-              // Converting the boolean response of `contains` to an integer
-              usize::from(root.contains('#'))
-            }
-          });
+          let level =
+            line.trim_start().chars().take_while(|&c| c == '#').count();
+          let level = if level > 0
+            && line.chars().nth(level).map_or(true, char::is_whitespace)
+          {
+            level
+          } else {
+            0
+          };
 
           nodes.push(Node::Heading {
             level,
