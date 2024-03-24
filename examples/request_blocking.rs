@@ -16,13 +16,10 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#[tokio::main]
-async fn main() {
-  match germ::request::sync::request(
+fn main() {
+  match germ::request::blocking::request(
     &url::Url::parse("gemini://fuwn.me").unwrap(),
-  )
-  .await
-  {
+  ) {
     Ok(response) => println!("{:?}", response),
     Err(_) => {}
   }

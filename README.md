@@ -39,15 +39,16 @@ features = ["ast"] # Enable the features you would like to use!
 
 ### Features
 
-| Feature   | Description                                                      |
-| --------- | ---------------------------------------------------------------- |
-| `ast`     | Construct AST trees from raw Gemtext.                            |
-| `convert` | Convert from Gemtext to markup formats such as HTML or Markdown. |
-| `request` | Make Gemini requests and get sane, structured results.           |
-| `meta`    | Structure-ize a Gemini response's meta section                   |
-| `macros`  | Macros to aid with various Germ-related functionalities          |
-| `quick`   | Quick functions to create valid Gemtext elements from input      |
-| `sync`    | An asynchronous version of `request`                             |
+| Feature    | Description                                                      |
+| ---------- | ---------------------------------------------------------------- |
+| `default`  | `ast`, `convert`, `meta`, `request`                              |
+| `ast`      | Construct AST trees from raw Gemtext.                            |
+| `blocking` | Blocking equivalent of `request`                                 |
+| `convert`  | Convert from Gemtext to markup formats such as HTML or Markdown. |
+| `request`  | Make Gemini requests and get sane, structured results.           |
+| `meta`     | Structure-ize a Gemini response's meta section                   |
+| `macros`   | Macros to aid with various Germ-related functionalities          |
+| `quick`    | Quick functions to create valid Gemtext elements from input      |
 
 ### Examples
 
