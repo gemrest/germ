@@ -16,13 +16,13 @@ categories = ["encoding"]
 
 [features]
 ast = []
+blocking = ["rustls", "url", "anyhow"]
 convert = ["ast"]
 default = ["ast", "convert", "meta", "request"]
 macros = ["ast", "convert"]
 meta = []
-request = ["rustls", "url", "anyhow"]
+request = ["rustls", "url", "anyhow", "tokio", "tokio-rustls"]
 quick = []
-sync = ["tokio", "tokio-rustls"]
 
 [dependencies]
 anyhow = { version = "1.0.70", optional = true } # `Result`

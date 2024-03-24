@@ -1,5 +1,5 @@
 // This file is part of Germ <https://github.com/gemrest/germ>.
-// Copyright (C) 2022-2023 Fuwn <contact@fuwn.me>
+// Copyright (C) 2022-2024 Fuwn <contact@fuwn.me>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
