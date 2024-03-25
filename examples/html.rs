@@ -16,6 +16,9 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
+//! This example demonstrates Germ's capabilities for converting Gemtext to
+//! HTML.
+
 const EXAMPLE_GEMTEXT: &str = r#"```This is alt-text
 Here goes the pre-formatted text.
 
@@ -46,9 +49,11 @@ This is more text after a blank line.
 That was a link without text."#;
 
 fn main() {
-  std::fs::write(
-    "examples/convert.html",
-    germ::convert::from_string(EXAMPLE_GEMTEXT, &germ::convert::Target::HTML),
-  )
-  .expect("could not write to file");
+  // Convert the Gemtext to HTML
+  let html =
+    germ::convert::from_string(EXAMPLE_GEMTEXT, &germ::convert::Target::HTML);
+
+  // Write the HTML to a file
+  std::fs::write("examples/convert.html", html)
+    .expect("could not write to file");
 }

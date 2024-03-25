@@ -16,6 +16,9 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
+//! This example demonstrates Germ's capabilities for converting Gemtext to
+//! Markdown.
+
 const EXAMPLE_GEMTEXT: &str = r#"```This is alt-text
 Here goes the pre-formatted text.
 
@@ -46,12 +49,12 @@ This is more text after a blank line.
 That was a link without text."#;
 
 fn main() {
-  std::fs::write(
-    "examples/convert.md",
-    germ::convert::from_string(
-      EXAMPLE_GEMTEXT,
-      &germ::convert::Target::Markdown,
-    ),
-  )
-  .expect("could not write to file");
+  // Convert the Gemtext to Markdown
+  let html = germ::convert::from_string(
+    EXAMPLE_GEMTEXT,
+    &germ::convert::Target::Markdown,
+  );
+
+  // Write the Markdown to a file
+  std::fs::write("examples/convert.md", html).expect("could not write to file");
 }
