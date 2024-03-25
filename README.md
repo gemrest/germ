@@ -52,7 +52,7 @@ features = ["ast"] # Enable the features you would like to use!
 
 ### Examples
 
-Examples can be found within the
+Thoroughly commented examples can be found within the
 [`examples/`](https://github.com/gemrest/germ/tree/main/examples) directory.
 
 ## License

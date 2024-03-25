@@ -16,6 +16,9 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
+//! This example converts Gemtext into an abstract syntax tree and then back
+//! into Gemtext, demonstrating both Germ's parsing and generation capabilities.
+
 const EXAMPLE_GEMTEXT: &str = r#"```This is alt-text
 Here goes the pre-formatted text.
 
@@ -46,5 +49,11 @@ This is more text after a blank line.
 That was a link without text."#;
 
 fn main() {
-  println!("{}", germ::ast::Ast::from_string(EXAMPLE_GEMTEXT).to_gemtext());
+  // Parse `EXAMPLE_GEMTEXT` into an abstract syntax tree
+  let ast = germ::ast::Ast::from_string(EXAMPLE_GEMTEXT);
+  // Convert the abstract syntax tree back to Gemtext
+  let gemtext = ast.to_gemtext();
+
+  // Print the Gemtext, identical to `EXAMPLE_GEMTEXT`
+  println!("{gemtext}");
 }

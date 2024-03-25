@@ -16,9 +16,23 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
+//! This example demonstrates Germ's capabilities for parsing Gemini meta
+//! sections.
+
 fn main() {
-  println!(
-    "{:?}",
-    germ::meta::Meta::from_string("text/gemini; hi=2; hi2=string=2")
-  )
+  // Parse Gemini meta section into a structured meta representation
+  let meta = germ::meta::Meta::from_string("text/gemini; hi=2; hi2=string=2");
+
+  // Debug view of the structured meta representation
+  println!("{:?}", meta);
+
+  // Convert the structured meta representation back to a string, identical to
+  // the original meta section
+  println!("{}", meta.to_string());
+
+  // The MIME type of the meta section
+  println!("{}", meta.mime());
+
+  // A debug view of the parameters of the meta section
+  println!("{:?}", meta.parameters());
 }

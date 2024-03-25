@@ -22,14 +22,10 @@ mod response;
 mod status;
 mod verifier;
 
-#[cfg(feature = "blocking")]
-pub mod blocking;
+#[cfg(feature = "blocking")] pub mod blocking;
 
-#[cfg(feature = "request")]
-pub mod non_blocking;
+#[cfg(feature = "request")] pub mod non_blocking;
 
-#[cfg(feature = "request")]
-pub use non_blocking::request;
-
+#[cfg(feature = "request")] pub use non_blocking::request;
 pub(crate) use verifier::GermVerifier;
 pub use {response::Response, status::Status};
