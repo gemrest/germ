@@ -4,7 +4,7 @@
 [![docs.rs](https://docs.rs/germ/badge.svg)](https://docs.rs/germ)
 [![github.com](https://github.com/gemrest/germ/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/gemrest/germ/actions/workflows/check.yaml)
 
-The Ultimate Gemini Toolkit.
+The Ultimate Gemini Toolkit
 
 Germ is a toolkit for the Gemini protocol which aims to have a little something
 for everyone. At the moment, Germ has **ZERO** dependencies (unless you use the
@@ -13,10 +13,14 @@ dependencies as possible.
 
 ## Features
 
-- AST builder to easily construct AST trees from raw Gemtext.
+- AST builder to easily construct and manipulate AST trees from raw Gemtext
 - Converters to easily convert from Gemtext to markup formats such as HTML or
-  Markdown.
-- More to come!
+  Markdown
+- Blocking and non-blocking request suite
+- Structured meta section manipulation
+- And more!
+
+Check out the rest of the features in the Features section under Usage
 
 ## Usage
 
@@ -27,10 +31,10 @@ Current version:
 # Cargo.toml
 
 [dependencies]
-# To enable all features
+# To enable only the base (default) features: ast, convert, meta, request
 # germ = "*" # Use current version show above!
 
-# To enable certain features
+# To enable only certain features
 [dependencies.germ]
 version = "*" # Use current version show above!
 default-features = false
