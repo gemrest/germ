@@ -30,10 +30,8 @@ use {
 /// ```rust
 /// #[tokio::main]
 /// async fn main() {
-///   match germ::request::sync::request(
-///     &url::Url::parse("gemini://fuwn.me").unwrap(),
-///   )
-///   .await
+///   match germ::request::request(&url::Url::parse("gemini://fuwn.me").unwrap())
+///     .await
 ///   {
 ///     Ok(response) => println!("{:?}", response),
 ///     Err(_) => {}
