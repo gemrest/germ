@@ -27,7 +27,9 @@ use {
 /// # Example
 ///
 /// ```rust
-/// match germ::request::request(&url::Url::parse("gemini://fuwn.me").unwrap()) {
+/// match germ::request::blocking::request(
+///   &url::Url::parse("gemini://fuwn.me").unwrap(),
+/// ) {
 ///   Ok(response) => println!("{:?}", response),
 ///   Err(_) => {}
 /// }
