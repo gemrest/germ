@@ -16,7 +16,7 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use std::{borrow::Cow, collections::HashMap};
+use std::{borrow::Cow, collections::HashMap, fmt::Display};
 
 /// Structure-ize a Gemini response's meta section into it's mime type and it's
 /// parameters.
@@ -28,20 +28,9 @@ pub struct Meta {
   parameters: HashMap<String, String>,
 }
 
-impl ToString for Meta {
-  /// Convert a `Meta` into a `String`
-  ///
-  /// # Example
-  /// ```rust
-  /// let original_string = "text/gemini; hi=2; hi2=string=2";
-  ///
-  /// assert_eq!(
-  ///   germ::meta::Meta::from_string(original_string).to_string(),
-  ///   original_string
-  /// );
-  /// ```
-  fn to_string(&self) -> String {
-    format!("{}{}", self.mime, {
+impl Display for Meta {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}{}", self.mime, {
       let mut parameters = self
         .parameters
         .iter()
