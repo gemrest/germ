@@ -173,9 +173,9 @@ pub enum Node {
 }
 
 impl Node {
-  /// Obtain the Gemtext content of a single [`Node`] as a [`String`]
+  /// Convert a single [`Node`] of any node type to a Gemtext [`String`]
   #[must_use]
-  pub fn content(&self) -> String {
+  pub fn to_gemtext(&self) -> String {
     super::Ast::from_nodes(vec![self.to_owned()]).to_gemtext()
   }
 }

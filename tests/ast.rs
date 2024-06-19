@@ -51,27 +51,36 @@ That was a link without text."#;
 
   #[test]
   fn build_multi_line_list_with_text() {
-    assert_eq!(*Ast::from_string("* item1\n* 2\nhi text").inner(), vec![
-      Node::List(vec!["item1".to_string(), "2".to_string()]),
-      Node::Text("hi text".to_string()),
-    ],);
+    assert_eq!(
+      *Ast::from_string("* item1\n* 2\nhi text").inner(),
+      vec![
+        Node::List(vec!["item1".to_string(), "2".to_string()]),
+        Node::Text("hi text".to_string()),
+      ],
+    );
   }
 
   #[test]
   fn build_multi_line_vec() {
-    assert_eq!(*Ast::from_string("=> /test hi\nhi there\n> hi").inner(), vec![
-      Node::Link { to: "/test".to_string(), text: Some("hi".to_string()) },
-      Node::Text("hi there".to_string()),
-      Node::Blockquote("hi".to_string()),
-    ],);
+    assert_eq!(
+      *Ast::from_string("=> /test hi\nhi there\n> hi").inner(),
+      vec![
+        Node::Link { to: "/test".to_string(), text: Some("hi".to_string()) },
+        Node::Text("hi there".to_string()),
+        Node::Blockquote("hi".to_string()),
+      ],
+    );
   }
 
   #[test]
   fn build_single_0th_from_vec() {
-    assert_eq!(Ast::from_string("=> /test hi").inner(), &vec![Node::Link {
-      to:   "/test".to_string(),
-      text: Some("hi".to_string()),
-    }],);
+    assert_eq!(
+      Ast::from_string("=> /test hi").inner(),
+      &vec![Node::Link {
+        to: "/test".to_string(),
+        text: Some("hi".to_string()),
+      }],
+    );
   }
 
   #[test]
