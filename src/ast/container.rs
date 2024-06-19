@@ -190,7 +190,7 @@ impl Ast {
       // Match the first character of the Gemtext line to understand the line
       // type
       match line.get(0..1).unwrap_or("") {
-        "=" => {
+        "=" if !*in_preformatted => {
           // If the Gemtext line starts with an "=" ("=>"), it is a link line,
           // so splitting it up should be easy enough.
           let line = line.get(2..).unwrap();
@@ -211,7 +211,7 @@ impl Ast {
 
           break;
         }
-        "#" => {
+        "#" if !*in_preformatted => {
           // If the Gemtext line starts with an "#", it is a heading, so let's
           // find out how deep it goes.
           let level =
@@ -234,7 +234,7 @@ impl Ast {
 
           break;
         }
-        "*" => {
+        "*" if !*in_preformatted => {
           // If the Gemtext line starts with an asterisk, it is a list item, so
           // let's enter a list context.
           if !*in_list {
@@ -249,7 +249,7 @@ impl Ast {
             break;
           }
         }
-        ">" => {
+        ">" if !*in_preformatted => {
           // If the Gemtext line starts with an ">", it is a blockquote, so
           // let's just clip off the line identifier.
           nodes.push(Node::Blockquote(
@@ -259,8 +259,8 @@ impl Ast {
           break;
         }
         "`" => {
-          // If the Gemtext line starts with a backtick, it is a list item, so
-          // let's enter a preformatted text context.
+          // If the Gemtext line starts with a backtick, it's a preformatted
+          // toggle, so let's enter a preformatted text context.
           *in_preformatted = !*in_preformatted;
 
           if *in_preformatted {
