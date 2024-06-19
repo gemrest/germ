@@ -171,3 +171,11 @@ pub enum Node {
   /// A whitespace line, a line which contains nothing but whitespace.
   Whitespace,
 }
+
+impl Node {
+  /// Obtain the Gemtext content of a single [`Node`] as a [`String`]
+  #[must_use]
+  pub fn content(&self) -> String {
+    super::Ast::from_nodes(vec![self.to_owned()]).to_gemtext()
+  }
+}

@@ -85,6 +85,25 @@ impl Ast {
     Self { inner: ast }
   }
 
+  /// Build an AST tree from a [`Vec`] of [`Node`]s
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// // This assertion converts the Gemtext "=> / Home\n" to an AST tree of one
+  /// // node, then converts the AST tree back to Gemtext, and compares it against
+  /// // the original Gemtext.
+  /// assert_eq!(
+  ///   germ::ast::Ast::from_nodes(
+  ///     germ::gemini_to_ast!("=> / Home\n").inner().to_vec()
+  ///   )
+  ///   .to_gemtext(),
+  ///   "=> / Home\n"
+  /// );
+  /// ```
+  #[must_use]
+  pub fn from_nodes(nodes: Vec<Node>) -> Self { Self { inner: nodes } }
+
   #[must_use]
   pub fn to_gemtext(&self) -> String {
     let mut gemtext = String::new();

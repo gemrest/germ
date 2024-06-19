@@ -101,4 +101,13 @@ That was a link without text."#;
       format!("{}\n", EXAMPLE_GEMTEXT),
     );
   }
+
+  #[test]
+  fn gemtext_to_ast_then_node_to_ast_to_gemtext() {
+    assert_eq!(
+      Ast::from_nodes(germ::gemini_to_ast!("=> / Home\n").inner().to_vec())
+        .to_gemtext(),
+      "=> / Home\n"
+    );
+  }
 }
