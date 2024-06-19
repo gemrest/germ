@@ -19,38 +19,9 @@
 //! This example converts Gemtext into an abstract syntax tree and then back
 //! into Gemtext, demonstrating both Germ's parsing and generation capabilities.
 
-const EXAMPLE_GEMTEXT: &str = r#"```This is alt-text
-Here goes the pre-formatted text.
-
-This continues the pre-formatted text on a new line after a blank line.
-```
-
-# This is a heading
-
-This is some text.
-
-This is more text after a blank line.
-
-* This is a single list item.
-* This is the next list item.
-
-* This is a new list.
-* This is the next item on the new list.
-
-## This is a sub-heading
-
-> This is a blockquote.
-
-### This is a sub-sub-heading.
-
-=> gemini://gem.rest/ This is a link to GemRest
-=> /somewhere
-
-That was a link without text."#;
-
 fn main() {
   // Parse `EXAMPLE_GEMTEXT` into an abstract syntax tree
-  let ast = germ::ast::Ast::from_string(EXAMPLE_GEMTEXT);
+  let ast = germ::ast::Ast::from_string(germ::EXAMPLE_GEMTEXT);
   // Convert the abstract syntax tree back to Gemtext
   let gemtext = ast.to_gemtext();
 

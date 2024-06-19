@@ -18,69 +18,34 @@
 
 #[cfg(test)]
 mod test {
-  use germ::ast::{Ast, Node};
-
-  const EXAMPLE_GEMTEXT: &str = r#"```This is alt-text
-Here goes the pre-formatted text.
-
-This continues the pre-formatted text on a new line after a blank line.
-```
-
-# This is a heading
-
-This is some text.
-
-This is more text after a blank line.
-
-* This is a single list item.
-* This is the next list item.
-
-* This is a new list.
-* This is the next item on the new list.
-
-## This is a sub-heading
-
-> This is a blockquote.
-
-### This is a sub-sub-heading.
-
-=> gemini://gem.rest/ This is a link to GemRest
-=> /somewhere
-
-That was a link without text."#;
+  use germ::{
+    ast::{Ast, Node},
+    EXAMPLE_GEMTEXT,
+  };
 
   #[test]
   fn build_multi_line_list_with_text() {
-    assert_eq!(
-      *Ast::from_string("* item1\n* 2\nhi text").inner(),
-      vec![
-        Node::List(vec!["item1".to_string(), "2".to_string()]),
-        Node::Text("hi text".to_string()),
-      ],
-    );
+    assert_eq!(*Ast::from_string("* item1\n* 2\nhi text").inner(), vec![
+      Node::List(vec!["item1".to_string(), "2".to_string()]),
+      Node::Text("hi text".to_string()),
+    ],);
   }
 
   #[test]
   fn build_multi_line_vec() {
-    assert_eq!(
-      *Ast::from_string("=> /test hi\nhi there\n> hi").inner(),
-      vec![
-        Node::Link { to: "/test".to_string(), text: Some("hi".to_string()) },
-        Node::Text("hi there".to_string()),
-        Node::Blockquote("hi".to_string()),
-      ],
-    );
+    assert_eq!(*Ast::from_string("=> /test hi\nhi there\n> hi").inner(), vec![
+      Node::Link { to: "/test".to_string(), text: Some("hi".to_string()) },
+      Node::Text("hi there".to_string()),
+      Node::Blockquote("hi".to_string()),
+    ],);
   }
 
   #[test]
   fn build_single_0th_from_vec() {
-    assert_eq!(
-      Ast::from_string("=> /test hi").inner(),
-      &vec![Node::Link {
-        to: "/test".to_string(),
-        text: Some("hi".to_string()),
-      }],
-    );
+    assert_eq!(Ast::from_string("=> /test hi").inner(), &vec![Node::Link {
+      to:   "/test".to_string(),
+      text: Some("hi".to_string()),
+    }],);
   }
 
   #[test]
