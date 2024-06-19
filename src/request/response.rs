@@ -16,7 +16,11 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use {crate::request::Status, rustls::SupportedCipherSuite, std::borrow::Cow};
+use {
+  crate::request::Status,
+  rustls::SupportedCipherSuite,
+  std::{borrow::Cow, fmt::Write},
+};
 
 #[derive(Debug, Clone)]
 pub struct Response {
@@ -39,7 +43,11 @@ impl Response {
       let mut string_split = string_form.split("\r\n");
 
       header = string_split.next().unwrap_or("").to_string();
-      content = Some(string_split.map(|s| format!("{s}\r\n")).collect());
+      content = Some(string_split.fold(String::new(), |mut output, s| {
+        let _ = write!(output, "{s}\r\n");
+
+        output
+      }));
     }
 
     let header_split = header.split_at(2);
