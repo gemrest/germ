@@ -88,7 +88,7 @@ That was a link without text."#;
       Ast::from_string(EXAMPLE_GEMTEXT).to_gemtext(),
       // `to_gemtext` appends a newline to all responses, so let's make sure we
       // account for that.
-      format!("{}\n", EXAMPLE_GEMTEXT),
+      EXAMPLE_GEMTEXT
     );
   }
 
@@ -98,16 +98,16 @@ That was a link without text."#;
       germ::gemini_to_ast!(EXAMPLE_GEMTEXT).to_gemtext(),
       // `to_gemtext` appends a newline to all responses, so let's make sure we
       // account for that.
-      format!("{}\n", EXAMPLE_GEMTEXT),
+      EXAMPLE_GEMTEXT
     );
   }
 
   #[test]
   fn gemtext_to_ast_then_node_to_ast_to_gemtext() {
     assert_eq!(
-      Ast::from_nodes(germ::gemini_to_ast!("=> / Home\n").inner().to_vec())
+      Ast::from_nodes(germ::gemini_to_ast!("=> / Home").inner().to_vec())
         .to_gemtext(),
-      "=> / Home\n"
+      "=> / Home"
     );
   }
 }

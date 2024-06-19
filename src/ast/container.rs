@@ -82,6 +82,14 @@ impl Ast {
       ));
     }
 
+    if source.chars().last().map_or(false, |c| c == '\n') {
+      if let Some(last) = ast.last() {
+        if !matches!(last, Node::Whitespace) {
+          ast.push(Node::Whitespace);
+        }
+      }
+    }
+
     Self { inner: ast }
   }
 
@@ -95,10 +103,10 @@ impl Ast {
   /// // the original Gemtext.
   /// assert_eq!(
   ///   germ::ast::Ast::from_nodes(
-  ///     germ::gemini_to_ast!("=> / Home\n").inner().to_vec()
+  ///     germ::gemini_to_ast!("=> / Home").inner().to_vec()
   ///   )
   ///   .to_gemtext(),
-  ///   "=> / Home\n"
+  ///   "=> / Home"
   /// );
   /// ```
   #[must_use]
@@ -143,6 +151,10 @@ impl Ast {
           )),
         Node::Whitespace => gemtext.push('\n'),
       }
+    }
+
+    if gemtext.ends_with('\n') && !gemtext.ends_with("\n\n") {
+      gemtext.pop();
     }
 
     gemtext
@@ -279,7 +291,7 @@ impl Ast {
 
           break;
         }
-        // This as a catchall, it does a number of things.
+        // This as a catchall. It does a number of things.
         _ => {
           if *in_preformatted {
             // If we are in a preformatted line context, add the line to the
