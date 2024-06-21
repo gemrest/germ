@@ -216,13 +216,6 @@ impl Ast {
           // find out how deep it goes.
           let level =
             line.trim_start().chars().take_while(|&c| c == '#').count();
-          let level = if level > 0
-            && line.chars().nth(level).map_or(true, char::is_whitespace)
-          {
-            level
-          } else {
-            0
-          };
 
           nodes.push(Node::Heading {
             level,
