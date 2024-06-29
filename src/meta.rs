@@ -20,7 +20,7 @@ use std::{borrow::Cow, collections::HashMap, fmt::Display};
 
 /// Structure-ize a Gemini response's meta section into it's mime type and it's
 /// parameters.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Meta {
   /// The mime type of a Gemini response
   mime:       String,

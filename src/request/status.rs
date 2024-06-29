@@ -28,7 +28,7 @@ use std::{fmt, fmt::Formatter};
 /// assert_eq!(Status::from(10), Status::Input);
 /// assert_eq!(i32::from(Status::Input), 10);
 /// ```
-#[derive(Debug, PartialEq, Clone, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Status {
   Input,
   SensitiveInput,
