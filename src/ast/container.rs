@@ -25,7 +25,7 @@ use super::Node;
 /// ```rust
 /// let _ = germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#);
 /// ```
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ast {
   inner: Vec<Node>,
 }

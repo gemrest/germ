@@ -22,7 +22,7 @@ use {
   std::{borrow::Cow, fmt::Write},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Response {
   status:  Status,
   meta:    String,
