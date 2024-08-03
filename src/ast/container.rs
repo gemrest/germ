@@ -124,16 +124,8 @@ impl Ast {
           to,
           text.clone().map_or_else(String::new, |text| format!(" {text}")),
         )),
-        Node::Heading { level, text } => gemtext.push_str(&format!(
-          "{} {}\n",
-          match level {
-            1 => "#",
-            2 => "##",
-            3 => "###",
-            _ => "",
-          },
-          text
-        )),
+        Node::Heading { level, text } =>
+          gemtext.push_str(&format!("{} {}\n", "#".repeat(*level), text)),
         Node::List(items) => gemtext.push_str(&format!(
           "{}\n",
           items
