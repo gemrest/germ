@@ -19,7 +19,7 @@
 #[cfg(test)]
 mod test {
   use germ::{
-    convert::{from_string, Target},
+    convert::{Target, from_string},
     gemini_to_html, gemini_to_md,
   };
 

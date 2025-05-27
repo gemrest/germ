@@ -16,7 +16,7 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use crate::ast::Node;
+use {crate::ast::Node, std::fmt::Write};
 
 pub fn convert(source: &[Node]) -> String {
   let mut html = String::new();
@@ -25,16 +25,20 @@ pub fn convert(source: &[Node]) -> String {
   // this AST tree to an alternative markup format.
   for node in source {
     match node {
-      Node::Text(text) => html.push_str(&format!("<p>{text}</p>")),
+      Node::Text(text) => {
+        let _ = write!(&mut html, "<p>{text}</p>");
+      }
       Node::Link { to, text } => {
-        html.push_str(&format!(
+        let _ = write!(
+          &mut html,
           "<a href=\"{}\">{}</a><br>",
           to,
           text.clone().unwrap_or_else(|| to.clone())
-        ));
+        );
       }
       Node::Heading { level, text } => {
-        html.push_str(&format!(
+        let _ = write!(
+          &mut html,
           "<{}>{}</{0}>",
           match level {
             1 => "h1",
@@ -43,20 +47,24 @@ pub fn convert(source: &[Node]) -> String {
             _ => "p",
           },
           text
-        ));
+        );
       }
-      Node::List(items) => html.push_str(&format!(
-        "<ul>{}</ul>",
-        items
-          .iter()
-          .map(|i| format!("<li>{i}</li>"))
-          .collect::<Vec<String>>()
-          .join("\n")
-      )),
-      Node::Blockquote(text) =>
-        html.push_str(&format!("<blockquote>{text}</blockquote>")),
+      Node::List(items) => {
+        let _ = write!(
+          &mut html,
+          "<ul>{}</ul>",
+          items
+            .iter()
+            .map(|i| format!("<li>{i}</li>"))
+            .collect::<Vec<String>>()
+            .join("\n")
+        );
+      }
+      Node::Blockquote(text) => {
+        let _ = write!(&mut html, "<blockquote>{text}</blockquote>");
+      }
       Node::PreformattedText { text, .. } => {
-        html.push_str(&format!("<pre>{text}</pre>"));
+        let _ = write!(&mut html, "<pre>{text}</pre>");
       }
       Node::Whitespace => {}
     }

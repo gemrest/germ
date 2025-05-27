@@ -17,7 +17,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 use {
-  rustls::{client, client::ServerCertVerified, Certificate},
+  rustls::{
+    Certificate,
+    client::{self, ServerCertVerified},
+  },
   std::time::SystemTime,
 };
 

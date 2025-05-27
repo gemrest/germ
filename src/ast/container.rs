@@ -16,7 +16,7 @@
 // Copyright (C) 2022-2022 Fuwn <contact@fuwn.me>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use super::Node;
+use {super::Node, std::fmt::Write};
 
 /// An AST structure which contains an AST tree
 ///
@@ -52,7 +52,7 @@ impl Ast {
   /// ```
   #[must_use]
   #[allow(clippy::needless_pass_by_value)]
-  pub fn from_string(value: (impl Into<String> + ?Sized)) -> Self {
+  pub fn from_string(value: impl Into<String>) -> Self {
     Self::from_value(&value.into())
   }
 
@@ -82,7 +82,7 @@ impl Ast {
       ));
     }
 
-    if source.chars().last().map_or(false, |c| c == '\n') {
+    if source.ends_with('\n') {
       if let Some(last) = ast.last() {
         if !matches!(last, Node::Whitespace) {
           ast.push(Node::Whitespace);
@@ -110,7 +110,7 @@ impl Ast {
   /// );
   /// ```
   #[must_use]
-  pub fn from_nodes(nodes: Vec<Node>) -> Self { Self { inner: nodes } }
+  pub const fn from_nodes(nodes: Vec<Node>) -> Self { Self { inner: nodes } }
 
   #[must_use]
   pub fn to_gemtext(&self) -> String {
@@ -118,29 +118,42 @@ impl Ast {
 
     for node in &self.inner {
       match node {
-        Node::Text(text) => gemtext.push_str(&format!("{text}\n")),
-        Node::Link { to, text } => gemtext.push_str(&format!(
-          "=> {}{}\n",
-          to,
-          text.clone().map_or_else(String::new, |text| format!(" {text}")),
-        )),
-        Node::Heading { level, text } =>
-          gemtext.push_str(&format!("{} {}\n", "#".repeat(*level), text)),
-        Node::List(items) => gemtext.push_str(&format!(
-          "{}\n",
-          items
-            .iter()
-            .map(|i| format!("* {i}"))
-            .collect::<Vec<String>>()
-            .join("\n"),
-        )),
-        Node::Blockquote(text) => gemtext.push_str(&format!("> {text}\n")),
-        Node::PreformattedText { alt_text, text } =>
-          gemtext.push_str(&format!(
-            "```{}\n{}```\n",
+        Node::Text(text) => {
+          let _ = writeln!(&mut gemtext, "{text}");
+        }
+        Node::Link { to, text } => {
+          let _ = writeln!(
+            &mut gemtext,
+            "=> {}{}",
+            to,
+            text.clone().map_or_else(String::new, |text| format!(" {text}")),
+          );
+        }
+        Node::Heading { level, text } => {
+          let _ = writeln!(&mut gemtext, "{} {}", "#".repeat(*level), text);
+        }
+        Node::List(items) => {
+          let _ = writeln!(
+            &mut gemtext,
+            "{}",
+            items
+              .iter()
+              .map(|i| format!("* {i}"))
+              .collect::<Vec<String>>()
+              .join("\n"),
+          );
+        }
+        Node::Blockquote(text) => {
+          let _ = writeln!(&mut gemtext, "> {text}");
+        }
+        Node::PreformattedText { alt_text, text } => {
+          let _ = writeln!(
+            &mut gemtext,
+            "```{}\n{}```",
             alt_text.clone().unwrap_or_default(),
             text
-          )),
+          );
+        }
         Node::Whitespace => gemtext.push('\n'),
       }
     }
@@ -281,7 +294,7 @@ impl Ast {
           if *in_preformatted {
             // If we are in a preformatted line context, add the line to the
             // preformatted blocks content and increment the line.
-            preformatted.push_str(&format!("{line}\n"));
+            let _ = writeln!(&mut preformatted, "{line}");
 
             if let Some(next_line) = lines.next() {
               line = next_line;

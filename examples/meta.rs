@@ -28,7 +28,7 @@ fn main() {
 
   // Convert the structured meta representation back to a string, identical to
   // the original meta section
-  println!("{}", meta.to_string());
+  println!("{}", meta);
 
   // The MIME type of the meta section
   println!("{}", meta.mime());

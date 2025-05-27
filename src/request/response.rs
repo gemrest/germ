@@ -64,6 +64,7 @@ impl Response {
   #[must_use]
   pub const fn status(&self) -> &Status { &self.status }
 
+  #[allow(clippy::missing_const_for_fn)]
   #[must_use]
   pub fn meta(&self) -> Cow<'_, str> { Cow::Borrowed(&self.meta) }
 

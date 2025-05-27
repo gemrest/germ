@@ -19,8 +19,8 @@
 #[cfg(test)]
 mod test {
   use germ::{
-    ast::{Ast, Node},
     EXAMPLE_GEMTEXT,
+    ast::{Ast, Node},
   };
 
   #[test]
@@ -51,7 +51,7 @@ mod test {
   #[test]
   fn build_single_element() {
     assert_eq!(
-      Ast::from_string("=> /test hi").inner().get(0).unwrap(),
+      Ast::from_string("=> /test hi").inner().first().unwrap(),
       &Node::Link { to: "/test".to_string(), text: Some("hi".to_string()) },
     );
   }

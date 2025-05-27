@@ -100,6 +100,7 @@ impl Meta {
   ///   "text/gemini",
   /// );
   /// ```
+  #[allow(clippy::missing_const_for_fn)]
   #[must_use]
   pub fn mime(&self) -> Cow<'_, str> { Cow::Borrowed(&self.mime) }
 
@@ -112,7 +113,7 @@ impl Meta {
   ///
   /// *meta.mime_mut() = "text/gemini".to_string();
   /// ```
-  pub fn mime_mut(&mut self) -> &mut String { &mut self.mime }
+  pub const fn mime_mut(&mut self) -> &mut String { &mut self.mime }
 
   /// Obtain non-mutable access to the parameters of the `Meta`
   ///
@@ -144,7 +145,7 @@ impl Meta {
   ///
   /// *meta.parameters_mut() = parameters;
   /// ```
-  pub fn parameters_mut(&mut self) -> &mut HashMap<String, String> {
+  pub const fn parameters_mut(&mut self) -> &mut HashMap<String, String> {
     &mut self.parameters
   }
 }
