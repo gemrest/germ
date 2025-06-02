@@ -198,7 +198,7 @@ impl Ast {
         "=" if !*in_preformatted => {
           // If the Gemtext line starts with an "=" ("=>"), it is a link line,
           // so splitting it up should be easy enough.
-          let line = line.get(2..).unwrap();
+          let line = line.get(2..).unwrap_or("");
           let mut split = line
             .split_whitespace()
             .map(String::from)
