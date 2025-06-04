@@ -13,6 +13,7 @@ repository = "https://github.com/gemrest/germ"
 license = "GPL-3.0-only"
 keywords = ["gemini", "parser", "lexer", "markdown", "converter"]
 categories = ["encoding"]
+rust-version = "1.83.0"
 
 [features]
 ast = []
