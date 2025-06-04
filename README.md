@@ -59,6 +59,9 @@ features = ["ast"] # Enable the features you would like to use!
 Thoroughly commented examples can be found within the
 [`examples/`](https://github.com/gemrest/germ/tree/main/examples) directory.
 
+Examples can be run by name using the example just task.
+(e.g., `just example ast_to_gemtext`)
+
 ## License
 
 This project is licensed with the
