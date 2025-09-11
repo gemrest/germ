@@ -90,4 +90,16 @@ mod test {
       2,
     );
   }
+
+  #[test]
+  fn meta_handles_malformed_parameters() {
+    let meta =
+      Meta::from_string("text/gemini; valid=value; malformed; another=test");
+
+    assert_eq!(meta.mime(), "text/gemini");
+    assert_eq!(meta.parameters().len(), 2);
+    assert_eq!(meta.parameters().get("valid"), Some(&"value".to_string()));
+    assert_eq!(meta.parameters().get("another"), Some(&"test".to_string()));
+    assert_eq!(meta.parameters().get("malformed"), None);
+  }
 }

@@ -78,13 +78,15 @@ impl Meta {
     let mut parameters = HashMap::new();
 
     for parameter in metas {
-      let key_value =
-        parameter.trim_start().split_at(parameter.find('=').unwrap_or(0));
+      let trimmed = parameter.trim_start();
 
-      parameters.insert(
-        key_value.0.to_string().replace('=', ""),
-        key_value.1.to_string(),
-      );
+      // Only parse parameters containing '=' as those without are malformed
+      // according to RFC 2045
+      if let Some(equal_pos) = trimmed.find('=') {
+        let (key, value) = trimmed.split_at(equal_pos);
+
+        parameters.insert(key.to_string(), value[1..].to_string());
+      }
     }
 
     Self { mime, parameters }
