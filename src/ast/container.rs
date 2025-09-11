@@ -158,7 +158,7 @@ impl Ast {
       }
     }
 
-    if gemtext.ends_with('\n') && !gemtext.ends_with("\n\n") {
+    if gemtext.ends_with('\n') {
       gemtext.pop();
     }
 
