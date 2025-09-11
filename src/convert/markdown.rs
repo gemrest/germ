@@ -45,17 +45,10 @@ pub fn convert(source: &[Node]) -> String {
           text
         );
       }
-      Node::List(items) => {
-        let _ = writeln!(
-          &mut markdown,
-          "{}",
-          items
-            .iter()
-            .map(|i| format!("- {i}"))
-            .collect::<Vec<String>>()
-            .join("\n"),
-        );
-      }
+      Node::List(items) =>
+        for item in items {
+          let _ = writeln!(&mut markdown, "- {item}");
+        },
       Node::Blockquote(text) => {
         let _ = writeln!(&mut markdown, "> {text}");
       }

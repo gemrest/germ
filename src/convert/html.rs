@@ -50,15 +50,13 @@ pub fn convert(source: &[Node]) -> String {
         );
       }
       Node::List(items) => {
-        let _ = write!(
-          &mut html,
-          "<ul>{}</ul>",
-          items
-            .iter()
-            .map(|i| format!("<li>{i}</li>"))
-            .collect::<Vec<String>>()
-            .join("\n")
-        );
+        let _ = write!(&mut html, "<ul>");
+
+        for item in items {
+          let _ = write!(&mut html, "<li>{item}</li>");
+        }
+
+        let _ = write!(&mut html, "</ul>");
       }
       Node::Blockquote(text) => {
         let _ = write!(&mut html, "<blockquote>{text}</blockquote>");

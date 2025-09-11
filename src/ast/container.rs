@@ -199,18 +199,14 @@ impl Ast {
           // If the Gemtext line starts with an "=" ("=>"), it is a link line,
           // so splitting it up should be easy enough.
           let line = line.get(2..).unwrap_or("");
-          let mut split = line
-            .split_whitespace()
-            .map(String::from)
-            .collect::<Vec<String>>()
-            .into_iter();
+          let mut split = line.split_whitespace();
 
           nodes.push(Node::Link {
-            to:   split.next().unwrap_or_default(),
+            to:   split.next().unwrap_or_default().to_string(),
             text: {
-              let rest = split.collect::<Vec<String>>().join(" ");
+              let rest: Vec<&str> = split.collect();
 
-              if rest.is_empty() { None } else { Some(rest) }
+              if rest.is_empty() { None } else { Some(rest.join(" ")) }
             },
           });
 
