@@ -29,4 +29,16 @@ mod test {
   fn i32_from_status() {
     assert_eq!(i32::from(Status::Input), 10);
   }
+
+  #[cfg(feature = "blocking")]
+  #[test]
+  fn invalid_url_handling() {
+    use url::Url;
+
+    let invalid_url = Url::parse("gemini://").unwrap();
+    let result = germ::request::blocking::request(&invalid_url);
+
+    assert!(result.is_err());
+    assert!(result.unwrap_err().to_string().contains("missing domain"));
+  }
 }

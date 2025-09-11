@@ -55,10 +55,16 @@ pub async fn request(url: &url::Url) -> anyhow::Result<Response> {
       .with_no_client_auth(),
   ))
   .connect(
-    rustls::ServerName::try_from(url.domain().unwrap_or_default())?,
+    rustls::ServerName::try_from(
+      url
+        .domain()
+        .ok_or_else(|| anyhow::anyhow!("Invalid URL: missing domain"))?,
+    )?,
     tokio::net::TcpStream::connect(format!(
       "{}:{}",
-      url.domain().unwrap_or(""),
+      url
+        .domain()
+        .ok_or_else(|| anyhow::anyhow!("Invalid URL: missing domain"))?,
       url.port().unwrap_or(1965)
     ))
     .await?,

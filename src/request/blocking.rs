@@ -44,13 +44,16 @@ pub fn request(url: &url::Url) -> anyhow::Result<Response> {
     .with_safe_defaults()
     .with_custom_certificate_verifier(std::sync::Arc::new(GermVerifier::new()))
     .with_no_client_auth();
+  let domain = url
+    .domain()
+    .ok_or_else(|| anyhow::anyhow!("Invalid URL: missing domain"))?;
   let mut connection = rustls::ClientConnection::new(
     std::sync::Arc::new(config),
-    url.domain().unwrap_or("").try_into()?,
+    domain.try_into()?,
   )?;
   let mut stream = std::net::TcpStream::connect(format!(
     "{}:{}",
-    url.domain().unwrap_or(""),
+    domain,
     url.port().unwrap_or(1965)
   ))?;
   let mut tls = rustls::Stream::new(&mut connection, &mut stream);
