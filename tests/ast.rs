@@ -84,4 +84,18 @@ mod test {
       "=> / Home"
     );
   }
+
+  #[test]
+  fn build_malformed_link_without_url() {
+    let ast = Ast::from_string("=>");
+
+    assert_eq!(ast.inner().len(), 1);
+
+    if let Node::Link { to, text } = ast.inner().first().unwrap() {
+      assert_eq!(to, "");
+      assert_eq!(text, &None);
+    } else {
+      panic!("Expected Link node");
+    }
+  }
 }

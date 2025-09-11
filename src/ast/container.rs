@@ -206,7 +206,7 @@ impl Ast {
             .into_iter();
 
           nodes.push(Node::Link {
-            to:   split.next().expect("no location in link"),
+            to:   split.next().unwrap_or_default(),
             text: {
               let rest = split.collect::<Vec<String>>().join(" ");
 
