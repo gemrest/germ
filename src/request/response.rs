@@ -35,16 +35,17 @@ impl Response {
       .position(|window| window == delimiter)
       .map_or(data.len(), |pos| pos + delimiter.len());
     let header_bytes = &data[..header_end];
-    let header = String::from_utf8_lossy(header_bytes).trim_end().to_string();
+    let header_cow = String::from_utf8_lossy(header_bytes);
+    let header_trimmed = header_cow.trim_end();
     let content_bytes = if header_end < data.len() {
       Some(data[header_end..].to_vec())
     } else {
       None
     };
-    let (status_string, meta_string) = if header.len() >= 2 {
-      header.split_at(2)
+    let (status_string, meta_string) = if header_trimmed.len() >= 2 {
+      header_trimmed.split_at(2)
     } else {
-      (header.as_str(), "")
+      (header_trimmed, "")
     };
     let status_code = status_string.parse::<i32>().unwrap_or(0);
 

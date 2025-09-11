@@ -30,22 +30,25 @@ pub struct Meta {
 
 impl Display for Meta {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}{}", self.mime, {
-      let mut parameters = self
-        .parameters
-        .iter()
-        .map(|(k, v)| format!("{}={}", *k, v))
-        .collect::<Vec<_>>();
+    write!(f, "{}", self.mime)?;
 
-      parameters.sort();
-      parameters.reverse();
+    if !self.parameters.is_empty() {
+      write!(f, "; ")?;
 
-      if parameters.is_empty() {
-        String::new()
-      } else {
-        format!("; {}", parameters.join("; "))
+      let mut parameters: Vec<_> = self.parameters.iter().collect();
+
+      parameters.sort_by(|a, b| a.0.cmp(b.0));
+
+      for (i, (key, value)) in parameters.iter().enumerate() {
+        if i > 0 {
+          write!(f, "; ")?;
+        }
+
+        write!(f, "{key}={value}")?;
       }
-    })
+    }
+
+    Ok(())
   }
 }
 
