@@ -224,10 +224,14 @@ impl Ast {
 
           nodes.push(Node::Heading {
             level,
-            // Here, we are `get`ing the `&str` starting at the `level`-th
-            // index, then trimming the start. These operations
-            // effectively off the line identifier.
-            text: line.get(level..).unwrap_or("").trim_start().to_string(),
+            // Here, the text after the heading markers is safely extracted.
+            // `chars().skip()` is used to safely handle UTF-8 boundaries.
+            text: line
+              .chars()
+              .skip(level)
+              .collect::<String>()
+              .trim_start()
+              .to_string(),
           });
 
           break;

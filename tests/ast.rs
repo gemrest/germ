@@ -95,7 +95,46 @@ mod test {
       assert_eq!(to, "");
       assert_eq!(text, &None);
     } else {
-      panic!("Expected Link node");
+      panic!("Expected link node");
+    }
+  }
+
+  #[test]
+  fn build_heading_with_unicode_and_edge_cases() {
+    // Unicode characters
+    let ast = Ast::from_string("# Hello, 世界!");
+
+    assert_eq!(ast.inner().len(), 1);
+
+    if let Node::Heading { level, text } = ast.inner().first().unwrap() {
+      assert_eq!(level, &1);
+      assert_eq!(text, "Hello, 世界!");
+    } else {
+      panic!("Expected heading node");
+    }
+
+    // Only hashes
+    let ast = Ast::from_string("###");
+
+    assert_eq!(ast.inner().len(), 1);
+
+    if let Node::Heading { level, text } = ast.inner().first().unwrap() {
+      assert_eq!(level, &3);
+      assert_eq!(text, "");
+    } else {
+      panic!("Expected heading node");
+    }
+
+    // Many hashes
+    let ast = Ast::from_string("########## Very Deep Heading");
+
+    assert_eq!(ast.inner().len(), 1);
+
+    if let Node::Heading { level, text } = ast.inner().first().unwrap() {
+      assert_eq!(level, &10);
+      assert_eq!(text, "Very Deep Heading");
+    } else {
+      panic!("Expected heading node");
     }
   }
 }
