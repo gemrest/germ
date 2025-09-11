@@ -19,3 +19,6 @@ docs:
 
 example example:
   cargo run --example {{ example }} --all-features
+
+diff url="gemini://fuwn.me/":
+  cargo run --example request_blocking_to_gemtext_from_ast --all-features -- {{ url }}
