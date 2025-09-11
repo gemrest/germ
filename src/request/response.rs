@@ -41,7 +41,11 @@ impl Response {
     } else {
       None
     };
-    let (status_string, meta_string) = header.split_at(2);
+    let (status_string, meta_string) = if header.len() >= 2 {
+      header.split_at(2)
+    } else {
+      (header.as_str(), "")
+    };
     let status_code = status_string.parse::<i32>().unwrap_or(0);
 
     Self {
