@@ -10,10 +10,11 @@ use std::{fmt, fmt::Formatter};
 /// assert_eq!(Status::from(10), Status::Input);
 /// assert_eq!(i32::from(Status::Input), 10);
 /// ```
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 pub enum Status {
   Input,
   SensitiveInput,
+  #[default]
   Success,
   TemporaryRedirect,
   PermanentRedirect,
@@ -31,10 +32,6 @@ pub enum Status {
   CertificateNotAuthorised,
   CertificateNotValid,
   Unsupported,
-}
-
-impl Default for Status {
-  fn default() -> Self { Self::Success }
 }
 
 impl From<Status> for i32 {
