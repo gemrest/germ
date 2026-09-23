@@ -53,5 +53,5 @@ pub fn from_string(
   source: &(impl ToString + ?Sized),
   target: &Target,
 ) -> String {
-  from_ast(&Ast::from_owned(&source.to_string()), target)
+  from_ast(&Ast::from_value(source), target)
 }

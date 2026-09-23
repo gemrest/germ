@@ -22,7 +22,7 @@ impl Ast {
   /// ```
   #[must_use]
   pub fn from_owned(value: &(impl AsRef<str> + ?Sized)) -> Self {
-    Self::from_value(value.as_ref())
+    Self::parse(value.as_ref())
   }
 
   /// Build an AST tree from Gemtext
@@ -35,7 +35,7 @@ impl Ast {
   #[must_use]
   #[allow(clippy::needless_pass_by_value)]
   pub fn from_string(value: impl Into<String>) -> Self {
-    Self::from_value(&value.into())
+    Self::parse(&value.into())
   }
 
   /// Build an AST tree from a value
@@ -47,10 +47,13 @@ impl Ast {
   /// ```
   #[must_use]
   pub fn from_value(value: &(impl ToString + ?Sized)) -> Self {
+    Self::parse(&value.to_string())
+  }
+
+  fn parse(source: &str) -> Self {
     let mut ast = vec![];
     let mut in_preformatted = false;
     let mut in_list = false;
-    let source = value.to_string();
     let mut lines = source.lines();
 
     // Iterate over all lines in the Gemtext `source`
@@ -85,7 +88,7 @@ impl Ast {
   /// // the original Gemtext.
   /// assert_eq!(
   ///   germ::ast::Ast::from_nodes(
-  ///     germ::gemini_to_ast!("=> / Home").inner().to_vec()
+  ///     germ::ast::Ast::from_string("=> / Home").inner().to_vec()
   ///   )
   ///   .to_gemtext(),
   ///   "=> / Home"
