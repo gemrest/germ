@@ -1,3 +1,5 @@
+#![cfg(feature = "meta")]
+
 #[cfg(test)]
 mod test {
   use germ::meta::Meta;

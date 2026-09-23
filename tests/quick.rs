@@ -1,3 +1,5 @@
+#![cfg(feature = "quick")]
+
 #[cfg(test)]
 mod test {
   use germ::quick::{self, heading};

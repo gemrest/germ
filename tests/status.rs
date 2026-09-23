@@ -1,3 +1,5 @@
+#![cfg(any(feature = "request", feature = "blocking"))]
+
 #[cfg(test)]
 mod test {
   use germ::request::Status;

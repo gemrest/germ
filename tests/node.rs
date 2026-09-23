@@ -1,3 +1,5 @@
+#![cfg(feature = "ast")]
+
 #[cfg(test)]
 mod test {
   #[test]

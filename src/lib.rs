@@ -15,7 +15,7 @@
 
 #[cfg(feature = "convert")] pub mod convert;
 
-#[cfg(feature = "request")] pub mod request;
+#[cfg(any(feature = "request", feature = "blocking"))] pub mod request;
 
 #[cfg(feature = "meta")] pub mod meta;
 

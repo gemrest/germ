@@ -26,6 +26,38 @@ request = ["rustls", "url", "anyhow", "tokio", "tokio-rustls"]
 quick = []
 example-gemtext = []
 
+[[example]]
+name = "ast"
+required-features = ["ast", "example-gemtext"]
+
+[[example]]
+name = "ast_to_gemtext"
+required-features = ["ast", "example-gemtext"]
+
+[[example]]
+name = "html"
+required-features = ["convert", "example-gemtext"]
+
+[[example]]
+name = "markdown"
+required-features = ["convert", "example-gemtext"]
+
+[[example]]
+name = "meta"
+required-features = ["meta"]
+
+[[example]]
+name = "request"
+required-features = ["request"]
+
+[[example]]
+name = "request_blocking"
+required-features = ["blocking"]
+
+[[example]]
+name = "request_blocking_to_gemtext_from_ast"
+required-features = ["ast", "blocking"]
+
 [dependencies]
 anyhow = { version = "1.0.98", optional = true } # `Result`
 rustls = { version = "0.21.12", features = [

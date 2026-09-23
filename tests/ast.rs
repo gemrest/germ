@@ -1,9 +1,9 @@
+#![cfg(feature = "ast")]
+
 #[cfg(test)]
 mod test {
-  use germ::{
-    EXAMPLE_GEMTEXT,
-    ast::{Ast, Node},
-  };
+  #[cfg(feature = "example-gemtext")] use germ::EXAMPLE_GEMTEXT;
+  use germ::ast::{Ast, Node};
 
   #[test]
   fn build_multi_line_list_with_text() {
@@ -38,6 +38,7 @@ mod test {
     );
   }
 
+  #[cfg(feature = "example-gemtext")]
   #[test]
   fn gemtext_to_ast_then_ast_to_gemtext() {
     assert_eq!(
@@ -48,6 +49,7 @@ mod test {
     );
   }
 
+  #[cfg(all(feature = "example-gemtext", feature = "macros"))]
   #[test]
   fn gemtext_to_ast_then_ast_to_gemtext_macro_expression() {
     assert_eq!(
@@ -61,7 +63,7 @@ mod test {
   #[test]
   fn gemtext_to_ast_then_node_to_ast_to_gemtext() {
     assert_eq!(
-      Ast::from_nodes(germ::gemini_to_ast!("=> / Home").inner().to_vec())
+      Ast::from_nodes(Ast::from_string("=> / Home").inner().to_vec())
         .to_gemtext(),
       "=> / Home"
     );

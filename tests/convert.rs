@@ -1,9 +1,9 @@
+#![cfg(feature = "convert")]
+
 #[cfg(test)]
 mod test {
-  use germ::{
-    convert::{Target, from_string},
-    gemini_to_html, gemini_to_md,
-  };
+  use germ::convert::{Target, from_string};
+  #[cfg(feature = "macros")] use germ::{gemini_to_html, gemini_to_md};
 
   #[test]
   fn convert_from_string_to_html_single_line() {
@@ -15,6 +15,7 @@ mod test {
     assert_eq!(from_string("hi\n# hi", &Target::HTML), "<p>hi</p><h1>hi</h1>",);
   }
 
+  #[cfg(feature = "macros")]
   #[test]
   fn convert_from_string_to_html_single_link_macro_expression() {
     assert_eq!(
@@ -41,6 +42,7 @@ mod test {
     );
   }
 
+  #[cfg(feature = "macros")]
   #[test]
   fn convert_from_string_to_markdown_single_macro_expression() {
     assert_eq!(gemini_to_md!("=> /to hello !"), "[hello !](/to)\n",);
