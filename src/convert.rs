@@ -10,7 +10,8 @@ mod markdown;
 /// Different targets to convert Gemtext to
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Target {
-  /// Convert Gemtext to HTML
+  /// Convert Gemtext to HTML. Links outside the Gemini, Gopher, HTTP, HTTPS,
+  /// mailto, and FTP schemes are rendered as text.
   HTML,
   /// Convert Gemtext to Markdown
   Markdown,
