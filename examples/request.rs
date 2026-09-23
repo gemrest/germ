@@ -2,33 +2,15 @@
 //! request to a Gemini capsule.
 
 #[tokio::main]
-async fn main() {
-  // Form a valid URL to a Gemini capsule
-  let url = url::Url::parse("gemini://fuwn.me").unwrap();
-  // Perform a non-blocking request to the Gemini capsule
-  let request = germ::request::request(&url).await;
+async fn main() -> anyhow::Result<()> {
+  let url = url::Url::parse("gemini://fuwn.me")?;
+  let response = germ::request::request(&url).await?;
 
-  match request {
-    // If the request was successful, print a debug view of the response
-    Ok(response) => {
-      // Print the status of the response
-      println!("{:?}", response.status());
+  println!("{:?}", response.status());
+  println!("{}", response.meta());
+  println!("{:?}", response.content());
+  println!("{:?}", response.size());
+  println!("{:?}", response.suite());
 
-      // Print the meta string of the response
-      //
-      // More detailed meta usage can be found in the `meta` example
-      println!("{}", response.meta());
-
-      // Print the content of the response, if present
-      println!("{:?}", response.content());
-
-      // Print the size of the response
-      println!("{:?}", response.size());
-
-      // Print a debug view of the SSL suite used
-      println!("{:?}", response.suite());
-    }
-    // If the request was unsuccessful, do nothing
-    Err(_) => {}
-  }
+  Ok(())
 }
