@@ -7,9 +7,9 @@
 The Ultimate Gemini Toolkit
 
 Germ is a toolkit for the Gemini protocol which aims to have a little something
-for everyone. At the moment, Germ has **ZERO** dependencies (unless you use the
-`request` feature), and Germ will continue to try its hardest to have as few
-dependencies as possible.
+for everyone. At the moment, Germ has **ZERO** dependencies unless you use the
+`request` or `blocking` feature, and Germ will continue to try its hardest to
+have as few dependencies as possible.
 
 ## Features
 
@@ -53,6 +53,19 @@ features = ["ast"] # Enable the features you would like to use!
 | `meta`     | Structure-ise a Gemini response's meta section                        |
 | `macros`   | Macros to aid with various Germ-related functionalities               |
 | `quick`    | Tiny functions to create valid Gemtext elements from structured input |
+
+Gemini requests verify server certificates against Mozilla CA roots by default.
+For a self-signed capsule, add its certificate in DER form to a
+`rustls::RootCertStore`, then pass that store to
+`request::blocking::request_with_roots` or
+`request::non_blocking::request_with_roots`. The store is a trust anchor, not an
+exact certificate fingerprint pin. Save and review the certificate separately
+before trusting it; the default request functions do not remember certificates
+between calls.
+
+HTML conversion escapes Gemtext content. It makes relative links and Gemini,
+Gopher, HTTP, HTTPS, mailto, and FTP links clickable; other schemes are shown
+as text.
 
 ### Examples
 

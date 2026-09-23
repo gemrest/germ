@@ -17,12 +17,12 @@ rust-version = "1.83.0"
 
 [features]
 ast = []
-blocking = ["rustls", "url", "anyhow"]
+blocking = ["rustls", "webpki-roots", "url", "anyhow"]
 convert = ["ast"]
 default = ["ast", "convert", "meta", "request"]
 macros = ["ast", "convert"]
 meta = []
-request = ["rustls", "url", "anyhow", "tokio", "tokio-rustls"]
+request = ["rustls", "webpki-roots", "url", "anyhow", "tokio", "tokio-rustls"]
 quick = []
 example-gemtext = []
 
@@ -60,9 +60,8 @@ required-features = ["ast", "blocking"]
 
 [dependencies]
 anyhow = { version = "1.0.98", optional = true } # `Result`
-rustls = { version = "0.21.12", features = [
-  "dangerous_configuration",
-], optional = true } # TLS
+rustls = { version = "0.21.12", optional = true } # TLS
+webpki-roots = { version = "1.0.9", optional = true } # CA certificates
 tokio-rustls = { version = "0.24.1", optional = true } # Non-blocking TLS
 tokio = { version = "1.45.1", optional = true, default-features = false, features = [
   "net",
@@ -71,3 +70,6 @@ tokio = { version = "1.45.1", optional = true, default-features = false, feature
   "macros",
 ] } # Non-blocking I/O
 url = { version = "2.5.4", optional = true } # URL Validation
+
+[dev-dependencies]
+rcgen = "=0.12.1"

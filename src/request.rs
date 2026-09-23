@@ -2,12 +2,13 @@
 
 mod response;
 mod status;
-mod verifier;
+mod trust;
 
 #[cfg(feature = "blocking")] pub mod blocking;
 
 #[cfg(feature = "request")] pub mod non_blocking;
 
 #[cfg(feature = "request")] pub use non_blocking::request;
-pub(crate) use verifier::GermVerifier;
-pub use {response::Response, status::Status};
+pub use {
+  response::Response, status::Status, trust::default_root_certificates,
+};
