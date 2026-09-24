@@ -3,7 +3,7 @@
 
 fn main() {
   let html = germ::convert::from_string(
-    germ::EXAMPLE_GEMTEXT,
+    include_str!("example.gmi"),
     &germ::convert::Target::HTML,
   );
 

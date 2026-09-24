@@ -2,8 +2,9 @@
 
 #[cfg(test)]
 mod test {
-  #[cfg(feature = "example-gemtext")] use germ::EXAMPLE_GEMTEXT;
   use germ::ast::{Ast, Node};
+
+  const EXAMPLE_GEMTEXT: &str = include_str!("../examples/example.gmi");
 
   #[test]
   fn build_multi_line_list_with_text() {
@@ -38,13 +39,12 @@ mod test {
     );
   }
 
-  #[cfg(feature = "example-gemtext")]
   #[test]
   fn gemtext_to_ast_then_ast_to_gemtext() {
     assert_eq!(Ast::from_string(EXAMPLE_GEMTEXT).to_gemtext(), EXAMPLE_GEMTEXT);
   }
 
-  #[cfg(all(feature = "example-gemtext", feature = "macros"))]
+  #[cfg(feature = "macros")]
   #[test]
   fn gemtext_to_ast_then_ast_to_gemtext_macro_expression() {
     assert_eq!(
@@ -179,5 +179,13 @@ mod test {
     ] {
       assert_eq!(Ast::from_string(source).to_gemtext(), source, "{source:?}");
     }
+  }
+
+  #[test]
+  fn normalises_mixed_line_endings_and_optional_marker_spaces() {
+    let source = "#  Heading\r\n=>  /path  label\n>  quote\r\n";
+    let expected = "#  Heading\r\n=> /path label\r\n>  quote\r\n";
+
+    assert_eq!(Ast::from_string(source).to_gemtext(), expected);
   }
 }

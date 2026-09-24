@@ -2,7 +2,7 @@
 
 [package]
 name = "germ"
-version = "0.4.8"
+version = "0.5.0"
 authors = ["Fuwn <contact@fuwn.me>"]
 edition = "2021"
 description = "The Ultimate Gemini Toolkit."
@@ -24,23 +24,22 @@ macros = ["ast", "convert"]
 meta = []
 request = ["rustls", "webpki-roots", "url", "anyhow", "tokio", "tokio-rustls"]
 quick = []
-example-gemtext = []
 
 [[example]]
 name = "ast"
-required-features = ["ast", "example-gemtext"]
+required-features = ["ast"]
 
 [[example]]
 name = "ast_to_gemtext"
-required-features = ["ast", "example-gemtext"]
+required-features = ["ast"]
 
 [[example]]
 name = "html"
-required-features = ["convert", "example-gemtext"]
+required-features = ["convert"]
 
 [[example]]
 name = "markdown"
-required-features = ["convert", "example-gemtext"]
+required-features = ["convert"]
 
 [[example]]
 name = "meta"

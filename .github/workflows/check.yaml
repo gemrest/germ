@@ -16,7 +16,7 @@ jobs:
           cargo test
           cargo test --all-features
           cargo test --no-default-features
-          for feature in ast blocking convert example-gemtext macros meta quick request; do
+          for feature in ast blocking convert macros meta quick request; do
             cargo test --no-default-features --features "$feature"
           done
       - name: Clippy 📎

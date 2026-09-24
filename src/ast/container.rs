@@ -24,33 +24,8 @@ impl Ast {
   /// let _ = germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#);
   /// ```
   #[must_use]
-  pub fn from_owned(value: &(impl AsRef<str> + ?Sized)) -> Self {
+  pub fn from_string(value: impl AsRef<str>) -> Self {
     Self::parse(value.as_ref())
-  }
-
-  /// Parses Gemtext into an AST.
-  ///
-  /// # Example
-  ///
-  /// ```rust
-  /// let _ = germ::ast::Ast::from_string(r#"=> gemini://gem.rest/ GemRest"#);
-  /// ```
-  #[must_use]
-  #[allow(clippy::needless_pass_by_value)]
-  pub fn from_string(value: impl Into<String>) -> Self {
-    Self::parse(&value.into())
-  }
-
-  /// Parses the string representation of a value into an AST.
-  ///
-  /// # Example
-  ///
-  /// ```rust
-  /// let _ = germ::ast::Ast::from_value(r#"=> gemini://gem.rest/ GemRest"#);
-  /// ```
-  #[must_use]
-  pub fn from_value(value: &(impl ToString + ?Sized)) -> Self {
-    Self::parse(&value.to_string())
   }
 
   fn parse(source: &str) -> Self {
@@ -169,7 +144,9 @@ impl Ast {
     }
   }
 
-  /// Serialises the document as Gemtext.
+  /// Serialises parsed nodes as Gemtext. A consistent line ending style and
+  /// final line ending are retained, but mixed line endings and optional
+  /// spaces after line markers can be normalised.
   #[must_use]
   pub fn to_gemtext(&self) -> String {
     let mut gemtext = String::new();

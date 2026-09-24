@@ -13,14 +13,14 @@ features to use `ast`, `convert`, `meta`, or `quick` without normal dependencies
 
 ```toml
 [dependencies]
-germ = "0.4.8"
+germ = "0.5.0"
 ```
 
 To select features without the default request client:
 
 ```toml
 [dependencies]
-germ = { version = "0.4.8", default-features = false, features = ["ast"] }
+germ = { version = "0.5.0", default-features = false, features = ["ast"] }
 ```
 
 ### Features
@@ -65,10 +65,16 @@ Store methods run synchronously, including in the async request path.
 TOFU uses the timeout and response size limits from `RequestOptions` but
 ignores its `root_certificates` field.
 
+`Ast::to_gemtext()` serialises parsed nodes and retains a consistent LF or CRLF
+style and a final line ending. Mixed line endings and optional spaces after
+Gemtext markers can be normalised, so exact source round trips are not
+guaranteed.
+
 HTML conversion escapes Gemtext content. HTML and Markdown conversion emit
 links for relative targets and Gemini, Gopher, HTTP, HTTPS, mailto, and FTP
-URLs; other schemes are shown as text. Markdown conversion also escapes link
-labels and destinations.
+URLs; other schemes are shown as text. Markdown conversion escapes literal
+text, link labels, and destinations, and chooses a code fence that does not
+close inside preformatted content.
 
 `Meta` parses quoted MIME parameters and quotes values as needed when formatting
 them.
@@ -85,6 +91,11 @@ Runnable examples can be found within the
 [`examples/`](https://github.com/gemrest/germ/tree/main/examples) directory.
 
 Run one with `just example ast_to_gemtext`.
+
+`just diff` fetches `gemini://geminiprotocol.net/` with a process-local TOFU
+certificate store. The certificate pin is not retained between runs. The
+example reports source formatting changes and checks that serialising and
+reparsing preserves the parsed nodes.
 
 ## License
 
