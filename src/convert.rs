@@ -7,17 +7,35 @@ mod markdown;
 
 #[cfg(feature = "macros")] mod macros;
 
-/// Different targets to convert Gemtext to
+fn safe_link_target(target: &str) -> bool {
+  if target.is_empty()
+    || target.chars().any(|character| {
+      character.is_whitespace() || character.is_control() || character == '\\'
+    })
+  {
+    return false;
+  }
+
+  match target.find([':', '/', '?', '#']) {
+    Some(index) if target.as_bytes()[index] == b':' => matches!(
+      target[..index].to_ascii_lowercase().as_str(),
+      "gemini" | "gopher" | "http" | "https" | "mailto" | "ftp"
+    ),
+    _ => true,
+  }
+}
+
+/// The available Gemtext conversion targets.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Target {
-  /// Convert Gemtext to HTML. Links outside the Gemini, Gopher, HTTP, HTTPS,
+  /// Converts Gemtext to HTML. Links outside the Gemini, Gopher, HTTP, HTTPS,
   /// mailto, and FTP schemes are rendered as text.
   HTML,
-  /// Convert Gemtext to Markdown
+  /// Converts Gemtext to Markdown with the same link scheme policy as HTML.
   Markdown,
 }
 
-/// Convert AST'd Gemtext into an alternative markup format.
+/// Converts a Gemtext AST into another markup format.
 ///
 /// # Example
 ///
@@ -37,7 +55,7 @@ pub fn from_ast(source: &Ast, target: &Target) -> String {
   }
 }
 
-/// Convert raw Gemtext into an alternative markup format.
+/// Converts raw Gemtext into another markup format.
 ///
 /// # Example
 ///

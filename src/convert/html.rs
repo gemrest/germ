@@ -1,4 +1,4 @@
-use crate::ast::Node;
+use {super::safe_link_target, crate::ast::Node};
 
 fn push_escaped(html: &mut String, value: &str) {
   for character in value.chars() {
@@ -10,24 +10,6 @@ fn push_escaped(html: &mut String, value: &str) {
       '\'' => html.push_str("&#39;"),
       _ => html.push(character),
     }
-  }
-}
-
-fn safe_link_target(target: &str) -> bool {
-  if target.is_empty()
-    || target.chars().any(|character| {
-      character.is_whitespace() || character.is_control() || character == '\\'
-    })
-  {
-    return false;
-  }
-
-  match target.find([':', '/', '?', '#']) {
-    Some(index) if target.as_bytes()[index] == b':' => matches!(
-      target[..index].to_ascii_lowercase().as_str(),
-      "gemini" | "gopher" | "http" | "https" | "mailto" | "ftp"
-    ),
-    _ => true,
   }
 }
 

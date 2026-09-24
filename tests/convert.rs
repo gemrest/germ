@@ -130,6 +130,38 @@ mod test {
   }
 
   #[test]
+  fn markdown_escapes_link_labels_and_destinations() {
+    assert_eq!(
+      from_string(
+        "=> /docs/(a)?x=1&next=<tag> A [link] *wow* &copy;",
+        &Target::Markdown
+      ),
+      "[A \\[link\\] \\*wow\\* \
+       \\&copy;](/docs/\\(a\\)?x=1&amp;next=%3Ctag%3E)\n"
+    );
+    assert_eq!(
+      from_string("=> /local", &Target::Markdown),
+      "[/local](/local)\n"
+    );
+  }
+
+  #[test]
+  fn markdown_renders_unsafe_links_as_text() {
+    let ast = Ast::from_nodes(vec![
+      Node::Link {
+        to:   "javascript:alert(1)".to_owned(),
+        text: Some("click".to_owned()),
+      },
+      Node::Link {
+        to:   "/bad\nline".to_owned(),
+        text: Some("evil\nlabel".to_owned()),
+      },
+    ]);
+
+    assert_eq!(from_ast(&ast, &Target::Markdown), "click\nevil&#10;label\n");
+  }
+
+  #[test]
   fn renderers_keep_unclosed_preformatted_content() {
     assert_eq!(
       from_string("```alt\n* item\n# heading", &Target::HTML),
