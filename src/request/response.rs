@@ -93,7 +93,10 @@ impl Response {
 
 #[cfg(test)]
 mod tests {
-  use super::{MAX_META_BYTES, Response};
+  use {
+    super::{MAX_META_BYTES, Response},
+    crate::request::{Status, StatusCategory},
+  };
 
   #[test]
   fn parses_header_and_body_without_changing_meta() {
@@ -126,5 +129,14 @@ mod tests {
 
     assert!(Response::parse(accepted.as_bytes(), None).is_ok());
     assert!(Response::parse(rejected.as_bytes(), None).is_err());
+  }
+
+  #[test]
+  fn retains_unknown_response_status() {
+    let response = Response::parse(b"29 text/gemini\r\nbody", None).unwrap();
+
+    assert_eq!(*response.status(), Status::Unknown(29));
+    assert_eq!(response.status().category(), Some(StatusCategory::Success));
+    assert_eq!(response.content_bytes(), Some(b"body".as_slice()));
   }
 }

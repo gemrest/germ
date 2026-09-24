@@ -1,6 +1,6 @@
 use std::{fmt, fmt::Formatter};
 
-/// Simple Gemini status reporting
+/// A Gemini response status.
 ///
 /// # Examples
 ///
@@ -31,12 +31,42 @@ pub enum Status {
   ClientCertificateRequired,
   CertificateNotAuthorised,
   CertificateNotValid,
+  /// A code without a named variant.
+  Unknown(i32),
+  /// A legacy status without a known code.
   Unsupported,
 }
 
+/// The response category indicated by the first status digit.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum StatusCategory {
+  Input,
+  Success,
+  Redirect,
+  TemporaryFailure,
+  PermanentFailure,
+  ClientCertificateRequired,
+}
+
+impl Status {
+  /// Returns the category for codes in the Gemini status range.
+  #[must_use]
+  pub fn category(self) -> Option<StatusCategory> {
+    match i32::from(self) {
+      10..=19 => Some(StatusCategory::Input),
+      20..=29 => Some(StatusCategory::Success),
+      30..=39 => Some(StatusCategory::Redirect),
+      40..=49 => Some(StatusCategory::TemporaryFailure),
+      50..=59 => Some(StatusCategory::PermanentFailure),
+      60..=69 => Some(StatusCategory::ClientCertificateRequired),
+      _ => None,
+    }
+  }
+}
+
 impl From<Status> for i32 {
-  fn from(n: Status) -> Self {
-    match n {
+  fn from(status: Status) -> Self {
+    match status {
       Status::Input => 10,
       Status::SensitiveInput => 11,
       Status::Success => 20,
@@ -55,14 +85,15 @@ impl From<Status> for i32 {
       Status::ClientCertificateRequired => 60,
       Status::CertificateNotAuthorised => 61,
       Status::CertificateNotValid => 62,
+      Status::Unknown(code) => code,
       Status::Unsupported => 0,
     }
   }
 }
 
 impl From<i32> for Status {
-  fn from(n: i32) -> Self {
-    match n {
+  fn from(code: i32) -> Self {
+    match code {
       10 => Self::Input,
       11 => Self::SensitiveInput,
       20 => Self::Success,
@@ -81,7 +112,7 @@ impl From<i32> for Status {
       60 => Self::ClientCertificateRequired,
       61 => Self::CertificateNotAuthorised,
       62 => Self::CertificateNotValid,
-      _ => Self::Unsupported,
+      _ => Self::Unknown(code),
     }
   }
 }

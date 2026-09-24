@@ -14,7 +14,9 @@ mod trust;
 
 #[cfg(feature = "request")] pub use non_blocking::request;
 pub use {
-  response::Response, status::Status, trust::default_root_certificates,
+  response::Response,
+  status::{Status, StatusCategory},
+  trust::default_root_certificates,
 };
 
 /// Configure both blocking and async Gemini requests.
