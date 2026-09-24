@@ -24,7 +24,7 @@ mod test {
     *meta.mime_mut() = "text/gemini".to_string();
     *meta.parameters_mut() = parameters;
 
-    assert_eq!(meta.to_string(), "text/gemini; hi=2; hi2=string=2");
+    assert_eq!(meta.to_string(), "text/gemini; hi=2; hi2=\"string=2\"");
   }
 
   #[test]
@@ -36,7 +36,7 @@ mod test {
 
   #[test]
   fn meta_to_string_with_parameters() {
-    let original_string = "text/gemini; hi=2; hi2=string=2";
+    let original_string = "text/gemini; hi=2; hi2=\"string=2\"";
 
     assert_eq!(Meta::from_string(original_string).to_string(), original_string);
   }
@@ -85,5 +85,34 @@ mod test {
     assert_eq!(meta.parameters().get("valid"), Some(&"value".to_string()));
     assert_eq!(meta.parameters().get("another"), Some(&"test".to_string()));
     assert_eq!(meta.parameters().get("malformed"), None);
+  }
+
+  #[test]
+  fn parses_quoted_parameter_values() {
+    let source = r#"text/gemini; title="part one; part two"; path="a\"b\\c"; charset=utf-8"#;
+    let meta = Meta::from_string(source);
+
+    assert_eq!(
+      meta.parameters().get("title").map(String::as_str),
+      Some("part one; part two")
+    );
+    assert_eq!(
+      meta.parameters().get("path").map(String::as_str),
+      Some("a\"b\\c")
+    );
+    assert_eq!(
+      meta.to_string(),
+      r#"text/gemini; charset=utf-8; path="a\"b\\c"; title="part one; part two""#
+    );
+  }
+
+  #[test]
+  fn skips_unclosed_quoted_parameters() {
+    let meta = Meta::from_string(
+      "text/gemini; valid=yes; broken=\"unfinished; other=lost",
+    );
+
+    assert_eq!(meta.parameters().len(), 1);
+    assert_eq!(meta.parameters().get("valid").map(String::as_str), Some("yes"));
   }
 }
