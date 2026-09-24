@@ -129,6 +129,30 @@ mod test {
     );
   }
 
+  #[test]
+  fn renderers_keep_unclosed_preformatted_content() {
+    assert_eq!(
+      from_string("```alt\n* item\n# heading", &Target::HTML),
+      "<pre>* item\n# heading</pre>"
+    );
+    assert_eq!(
+      from_string("```alt\n* item\n# heading", &Target::Markdown),
+      "```alt\n* item\n# heading\n```\n"
+    );
+    assert_eq!(
+      from_string("```alt\ncode\n", &Target::HTML),
+      "<pre>code\n</pre>"
+    );
+  }
+
+  #[test]
+  fn markdown_separates_a_fenced_block_from_following_text() {
+    assert_eq!(
+      from_string("```\ncode\n```\nafter", &Target::Markdown),
+      "```\ncode\n```\nafter\n"
+    );
+  }
+
   #[cfg(feature = "macros")]
   #[test]
   fn convert_from_string_to_markdown_single_macro_expression() {

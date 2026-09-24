@@ -150,7 +150,7 @@ pub enum Node {
     /// ```
     text:     String,
   },
-  /// A whitespace line, a line which contains nothing but whitespace.
+  /// An empty line.
   Whitespace,
 }
 

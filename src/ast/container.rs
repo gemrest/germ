@@ -1,6 +1,6 @@
-use {super::Node, std::fmt::Write};
+use super::Node;
 
-/// An AST structure which contains an AST tree
+/// A parsed Gemtext document.
 ///
 /// # Example
 ///
@@ -9,11 +9,14 @@ use {super::Node, std::fmt::Write};
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ast {
-  inner: Vec<Node>,
+  inner:                    Vec<Node>,
+  append_final_line_ending: bool,
+  line_ending:              &'static str,
+  unclosed_preformatted:    bool,
 }
 
 impl Ast {
-  /// Build an AST tree from Gemtext
+  /// Parses Gemtext into an AST.
   ///
   /// # Example
   ///
@@ -25,7 +28,7 @@ impl Ast {
     Self::parse(value.as_ref())
   }
 
-  /// Build an AST tree from Gemtext
+  /// Parses Gemtext into an AST.
   ///
   /// # Example
   ///
@@ -38,7 +41,7 @@ impl Ast {
     Self::parse(&value.into())
   }
 
-  /// Build an AST tree from a value
+  /// Parses the string representation of a value into an AST.
   ///
   /// # Example
   ///
@@ -51,39 +54,101 @@ impl Ast {
   }
 
   fn parse(source: &str) -> Self {
-    let mut ast = vec![];
-    let mut in_preformatted = false;
-    let mut in_list = false;
-    let mut lines = source.lines();
+    let mut line_ending = None;
+    let mut nodes = Vec::new();
+    let mut list_items = Vec::new();
+    let mut preformatted_alt_text: Option<String> = None;
+    let mut preformatted_lines = Vec::new();
+    let mut unclosed_preformatted = false;
 
-    // Iterate over all lines in the Gemtext `source`
-    while let Some(line) = lines.next() {
-      // Evaluate the Gemtext line and append its AST node to the `ast` tree
-      ast.append(&mut Self::evaluate(
-        line,
-        &mut lines,
-        &mut in_preformatted,
-        &mut in_list,
-      ));
-    }
+    for line_with_ending in source.split_inclusive('\n') {
+      let line = if let Some(line) = line_with_ending.strip_suffix("\r\n") {
+        line_ending.get_or_insert("\r\n");
 
-    if source.ends_with('\n') {
-      if let Some(last) = ast.last() {
-        if !matches!(last, Node::Whitespace) {
-          ast.push(Node::Whitespace);
+        line
+      } else if let Some(line) = line_with_ending.strip_suffix('\n') {
+        line_ending.get_or_insert("\n");
+
+        line
+      } else {
+        line_with_ending
+      };
+
+      if preformatted_alt_text.is_some() {
+        if line.starts_with("```") {
+          let alt_text = preformatted_alt_text.take().unwrap();
+          let text = if preformatted_lines.is_empty() {
+            String::new()
+          } else {
+            let mut text = preformatted_lines.join(line_ending.unwrap_or("\n"));
+
+            text.push_str(line_ending.unwrap_or("\n"));
+
+            text
+          };
+
+          nodes.push(Node::PreformattedText {
+            alt_text: (!alt_text.is_empty()).then_some(alt_text),
+            text,
+          });
+          preformatted_lines.clear();
+        } else {
+          preformatted_lines.push(line);
         }
+
+        continue;
       }
+
+      if let Some(alt_text) = line.strip_prefix("```") {
+        flush_list(&mut nodes, &mut list_items);
+
+        preformatted_alt_text = Some(alt_text.to_owned());
+
+        continue;
+      }
+
+      if let Some(item) = line.strip_prefix("* ") {
+        list_items.push(item.to_owned());
+
+        continue;
+      }
+
+      flush_list(&mut nodes, &mut list_items);
+      nodes.push(parse_line(line));
     }
 
-    Self { inner: ast }
+    flush_list(&mut nodes, &mut list_items);
+
+    if let Some(alt_text) = preformatted_alt_text {
+      unclosed_preformatted = true;
+
+      let mut text = preformatted_lines.join(line_ending.unwrap_or("\n"));
+
+      if source.ends_with('\n') && !preformatted_lines.is_empty() {
+        text.push_str(line_ending.unwrap_or("\n"));
+      }
+
+      nodes.push(Node::PreformattedText {
+        alt_text: (!alt_text.is_empty()).then_some(alt_text),
+        text,
+      });
+    }
+
+    Self {
+      inner: nodes,
+      append_final_line_ending: source.ends_with('\n')
+        && (!unclosed_preformatted || preformatted_lines.is_empty()),
+      line_ending: line_ending.unwrap_or("\n"),
+      unclosed_preformatted,
+    }
   }
 
-  /// Build an AST tree from a [`Vec`] of [`Node`]s
+  /// Builds an AST from a [`Vec`] of [`Node`]s.
   ///
   /// # Example
   ///
   /// ```rust
-  /// // This assertion converts the Gemtext "=> / Home\n" to an AST tree of one
+  /// // This assertion converts the Gemtext "=> / Home" to an AST tree of one
   /// // node, then converts the AST tree back to Gemtext, and compares it against
   /// // the original Gemtext.
   /// assert_eq!(
@@ -95,62 +160,110 @@ impl Ast {
   /// );
   /// ```
   #[must_use]
-  pub const fn from_nodes(nodes: Vec<Node>) -> Self { Self { inner: nodes } }
+  pub const fn from_nodes(nodes: Vec<Node>) -> Self {
+    Self {
+      inner:                    nodes,
+      append_final_line_ending: false,
+      line_ending:              "\n",
+      unclosed_preformatted:    false,
+    }
+  }
 
+  /// Serialises the document as Gemtext.
   #[must_use]
   pub fn to_gemtext(&self) -> String {
     let mut gemtext = String::new();
 
-    for node in &self.inner {
+    for (index, node) in self.inner.iter().enumerate() {
+      if index > 0 {
+        gemtext.push_str(self.line_ending);
+      }
+
       match node {
-        Node::Text(text) => {
-          let _ = writeln!(&mut gemtext, "{text}");
-        }
+        Node::Text(text) => gemtext.push_str(text),
+
         Node::Link { to, text } => {
-          let _ = writeln!(
-            &mut gemtext,
-            "=> {}{}",
-            to,
-            text.clone().map_or_else(String::new, |text| format!(" {text}")),
-          );
+          gemtext.push_str("=>");
+
+          if !to.is_empty() {
+            gemtext.push(' ');
+            gemtext.push_str(to);
+          }
+
+          if let Some(text) = text {
+            gemtext.push(' ');
+            gemtext.push_str(text);
+          }
         }
+
         Node::Heading { level, text } => {
-          let _ = writeln!(&mut gemtext, "{} {}", "#".repeat(*level), text);
+          gemtext.push_str(&"#".repeat(*level));
+
+          if !text.is_empty() {
+            gemtext.push(' ');
+            gemtext.push_str(text);
+          }
         }
+
         Node::List(items) => {
-          let _ = writeln!(
-            &mut gemtext,
-            "{}",
-            items
-              .iter()
-              .map(|i| format!("* {i}"))
-              .collect::<Vec<String>>()
-              .join("\n"),
-          );
+          for (item_index, item) in items.iter().enumerate() {
+            if item_index > 0 {
+              gemtext.push_str(self.line_ending);
+            }
+
+            gemtext.push_str("* ");
+            gemtext.push_str(item);
+          }
         }
+
         Node::Blockquote(text) => {
-          let _ = writeln!(&mut gemtext, "> {text}");
+          gemtext.push('>');
+
+          if !text.is_empty() {
+            gemtext.push(' ');
+            gemtext.push_str(text);
+          }
         }
+
         Node::PreformattedText { alt_text, text } => {
-          let _ = writeln!(
-            &mut gemtext,
-            "```{}\n{}```",
-            alt_text.clone().unwrap_or_default(),
-            text
-          );
+          let is_unclosed_last =
+            index + 1 == self.inner.len() && self.unclosed_preformatted;
+
+          gemtext.push_str("```");
+
+          if let Some(alt_text) = alt_text {
+            gemtext.push_str(alt_text);
+          }
+
+          if is_unclosed_last {
+            if !text.is_empty() {
+              gemtext.push_str(self.line_ending);
+              gemtext.push_str(text);
+            }
+          } else {
+            gemtext.push_str(self.line_ending);
+            gemtext.push_str(text);
+
+            if !text.is_empty() && !text.ends_with('\n') {
+              gemtext.push_str(self.line_ending);
+            }
+
+            gemtext.push_str("```");
+          }
         }
-        Node::Whitespace => gemtext.push('\n'),
+
+        Node::Whitespace => {}
       }
     }
 
-    if gemtext.ends_with('\n') {
-      gemtext.pop();
+    if self.append_final_line_ending {
+      gemtext.push_str(self.line_ending);
     }
 
     gemtext
   }
 
-  /// The actual AST of `Ast`
+  /// Returns the parsed nodes.
   ///
   /// # Example
   ///
@@ -160,158 +273,56 @@ impl Ast {
   /// ```
   #[must_use]
   pub const fn inner(&self) -> &Vec<Node> { &self.inner }
+}
 
-  #[allow(clippy::too_many_lines)]
-  fn evaluate(
-    line: &str,
-    lines: &mut std::str::Lines<'_>,
-    in_preformatted: &mut bool,
-    in_list: &mut bool,
-  ) -> Vec<Node> {
-    let mut preformatted = String::new();
-    let mut alt_text = String::new();
-    let mut nodes = vec![];
-    let mut line = line;
-    let mut list_items = vec![];
+fn flush_list(nodes: &mut Vec<Node>, items: &mut Vec<String>) {
+  if !items.is_empty() {
+    nodes.push(Node::List(std::mem::take(items)));
+  }
+}
 
-    // Enter a not-so-infinite loop as sometimes, we may need to stay in an
-    // evaluation loop, e.g., multiline contexts: preformatted text, lists, etc.
-    loop {
-      // Match the first character of the Gemtext line to understand the line
-      // type
-      match line.get(0..1).unwrap_or("") {
-        "=" if !*in_preformatted => {
-          // If the Gemtext line starts with an "=" ("=>"), it is a link line,
-          // so splitting it up should be easy enough.
-          let line = line.get(2..).unwrap_or("");
-          let mut split = line.split_whitespace();
+fn after_optional_whitespace(text: &str) -> &str {
+  match text.chars().next() {
+    Some(character) if character.is_whitespace() =>
+      &text[character.len_utf8()..],
+    _ => text,
+  }
+}
 
-          nodes.push(Node::Link {
-            to:   split.next().unwrap_or_default().to_string(),
-            text: {
-              let rest: Vec<&str> = split.collect();
+fn parse_line(line: &str) -> Node {
+  if let Some(link_content) = line.strip_prefix("=>") {
+    return parse_link(link_content);
+  }
 
-              if rest.is_empty() { None } else { Some(rest.join(" ")) }
-            },
-          });
+  if line.starts_with('#') {
+    let level = line.bytes().take_while(|byte| *byte == b'#').count();
 
-          break;
-        }
-        "#" if !*in_preformatted => {
-          // If the Gemtext line starts with an "#", it is a heading, so let's
-          // find out how deep it goes.
-          let level =
-            line.trim_start().chars().take_while(|&c| c == '#').count();
-
-          nodes.push(Node::Heading {
-            level,
-            // Here, the text after the heading markers is safely extracted.
-            // `chars().skip()` is used to safely handle UTF-8 boundaries.
-            text: line
-              .chars()
-              .skip(level)
-              .collect::<String>()
-              .trim_start()
-              .to_string(),
-          });
-
-          break;
-        }
-        "*" if !*in_preformatted => {
-          // If the Gemtext line starts with an asterisk, it is a list item, so
-          // let's enter a list context.
-          if !*in_list {
-            *in_list = true;
-          }
-
-          list_items.push(line.get(1..).unwrap_or("").trim_start().to_string());
-
-          if let Some(next_line) = lines.next() {
-            line = next_line;
-          } else {
-            break;
-          }
-        }
-        ">" if !*in_preformatted => {
-          // If the Gemtext line starts with an ">", it is a blockquote, so
-          // let's just clip off the line identifier.
-          nodes.push(Node::Blockquote(
-            line.get(1..).unwrap_or("").trim_start().to_string(),
-          ));
-
-          break;
-        }
-        "`" => {
-          // If the Gemtext line starts with a backtick, it's a preformatted
-          // toggle, so let's enter a preformatted text context.
-          *in_preformatted = !*in_preformatted;
-
-          if *in_preformatted {
-            alt_text = line.get(3..).unwrap_or("").to_string();
-
-            if let Some(next_line) = lines.next() {
-              line = next_line;
-            } else {
-              break;
-            }
-          } else {
-            nodes.push(Node::PreformattedText {
-              alt_text: if alt_text.is_empty() { None } else { Some(alt_text) },
-              text:     preformatted,
-            });
-
-            break;
-          }
-        }
-        "" if !*in_preformatted => {
-          if line.is_empty() {
-            // If the line has nothing on it, it is a whitespace line, as long
-            // as we aren't in a preformatted line context.
-            nodes.push(Node::Whitespace);
-          } else {
-            nodes.push(Node::Text(line.to_string()));
-          }
-
-          break;
-        }
-        // This as a catchall. It does a number of things.
-        _ => {
-          if *in_preformatted {
-            // If we are in a preformatted line context, add the line to the
-            // preformatted blocks content and increment the line.
-            let _ = writeln!(&mut preformatted, "{line}");
-
-            if let Some(next_line) = lines.next() {
-              line = next_line;
-            } else {
-              break;
-            }
-          } else {
-            // If we are in a list item and hit a catchall, that must mean that
-            // we encountered a line which is not a list line, so
-            // let's stop adding items to the list context.
-            if *in_list {
-              *in_list = false;
-
-              nodes.push(Node::Text(line.to_string()));
-
-              break;
-            }
-
-            nodes.push(Node::Text(line.to_string()));
-
-            break;
-          }
-        }
-      }
+    if level <= 3 {
+      return Node::Heading {
+        level,
+        text: after_optional_whitespace(&line[level..]).to_owned(),
+      };
     }
+  }
 
-    if !list_items.is_empty() {
-      nodes.reverse();
-      nodes.push(Node::List(list_items));
-      nodes.reverse();
-    }
+  if let Some(quote) = line.strip_prefix('>') {
+    return Node::Blockquote(after_optional_whitespace(quote).to_owned());
+  }
 
-    nodes
+  if line.is_empty() { Node::Whitespace } else { Node::Text(line.to_owned()) }
+}
+
+fn parse_link(link_content: &str) -> Node {
+  let target_and_label = link_content.trim_start_matches(char::is_whitespace);
+  let target_end = target_and_label
+    .find(char::is_whitespace)
+    .unwrap_or(target_and_label.len());
+  let target = &target_and_label[..target_end];
+  let label =
+    target_and_label[target_end..].trim_start_matches(char::is_whitespace);
+
+  Node::Link {
+    to:   target.to_owned(),
+    text: (!label.is_empty()).then(|| label.to_owned()),
   }
 }

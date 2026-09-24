@@ -3,17 +3,17 @@ use {crate::ast::Node, std::fmt::Write};
 pub fn convert(source: &[Node]) -> String {
   let mut markdown = String::new();
 
-  // Since we have an AST tree of the Gemtext, it is very easy to convert from
-  // this AST tree to an alternative markup format.
   for node in source {
     match node {
       Node::Text(text) => {
         let _ = writeln!(&mut markdown, "{text}");
       }
+
       Node::Link { to, text } => markdown.push_str(&text.clone().map_or_else(
         || format!("<{to}>\n"),
         |text| format!("[{text}]({to})\n"),
       )),
+
       Node::Heading { level, text } => {
         let _ = writeln!(
           &mut markdown,
@@ -27,21 +27,33 @@ pub fn convert(source: &[Node]) -> String {
           text
         );
       }
+
       Node::List(items) =>
         for item in items {
           let _ = writeln!(&mut markdown, "- {item}");
         },
+
       Node::Blockquote(text) => {
         let _ = writeln!(&mut markdown, "> {text}");
       }
+
       Node::PreformattedText { alt_text, text } => {
-        let _ = writeln!(
-          &mut markdown,
-          "```{}\n{}```",
-          alt_text.clone().unwrap_or_default(),
-          text
-        );
+        markdown.push_str("```");
+
+        if let Some(alt_text) = alt_text {
+          markdown.push_str(alt_text);
+        }
+
+        markdown.push('\n');
+        markdown.push_str(text);
+
+        if !text.is_empty() && !text.ends_with('\n') {
+          markdown.push('\n');
+        }
+
+        markdown.push_str("```\n");
       }
+
       Node::Whitespace => markdown.push('\n'),
     }
   }

@@ -41,12 +41,7 @@ mod test {
   #[cfg(feature = "example-gemtext")]
   #[test]
   fn gemtext_to_ast_then_ast_to_gemtext() {
-    assert_eq!(
-      Ast::from_string(EXAMPLE_GEMTEXT).to_gemtext(),
-      // `to_gemtext` appends a newline to all responses, so let's make sure we
-      // account for that.
-      EXAMPLE_GEMTEXT
-    );
+    assert_eq!(Ast::from_string(EXAMPLE_GEMTEXT).to_gemtext(), EXAMPLE_GEMTEXT);
   }
 
   #[cfg(all(feature = "example-gemtext", feature = "macros"))]
@@ -54,8 +49,6 @@ mod test {
   fn gemtext_to_ast_then_ast_to_gemtext_macro_expression() {
     assert_eq!(
       germ::gemini_to_ast!(EXAMPLE_GEMTEXT).to_gemtext(),
-      // `to_gemtext` appends a newline to all responses, so let's make sure we
-      // account for that.
       EXAMPLE_GEMTEXT
     );
   }
@@ -85,7 +78,6 @@ mod test {
 
   #[test]
   fn build_heading_with_unicode_and_edge_cases() {
-    // Unicode characters
     let ast = Ast::from_string("# Hello, 世界!");
 
     assert_eq!(ast.inner().len(), 1);
@@ -97,7 +89,6 @@ mod test {
       panic!("Expected heading node");
     }
 
-    // Only hashes
     let ast = Ast::from_string("###");
 
     assert_eq!(ast.inner().len(), 1);
@@ -109,16 +100,84 @@ mod test {
       panic!("Expected heading node");
     }
 
-    // Many hashes
     let ast = Ast::from_string("########## Very Deep Heading");
 
-    assert_eq!(ast.inner().len(), 1);
+    assert_eq!(ast.inner(), &vec![Node::Text(
+      "########## Very Deep Heading".to_string()
+    )]);
+  }
 
-    if let Node::Heading { level, text } = ast.inner().first().unwrap() {
-      assert_eq!(level, &10);
-      assert_eq!(text, "Very Deep Heading");
-    } else {
-      panic!("Expected heading node");
+  #[test]
+  fn recognises_only_exact_line_markers() {
+    let ast = Ast::from_string(
+      "*star\n=text\n`tick\n#### too deep\n* item\n*  indented",
+    );
+
+    assert_eq!(ast.inner(), &vec![
+      Node::Text("*star".to_string()),
+      Node::Text("=text".to_string()),
+      Node::Text("`tick".to_string()),
+      Node::Text("#### too deep".to_string()),
+      Node::List(vec!["item".to_string(), " indented".to_string()]),
+    ]);
+  }
+
+  #[test]
+  fn preserves_link_label_spacing() {
+    let source = "=> /path label  with   spaces";
+    let ast = Ast::from_string(source);
+
+    assert_eq!(ast.inner(), &vec![Node::Link {
+      to:   "/path".to_string(),
+      text: Some("label  with   spaces".to_string()),
+    }]);
+    assert_eq!(ast.to_gemtext(), source);
+  }
+
+  #[test]
+  fn preserves_unclosed_preformatted_content() {
+    let source = "```alt\n* item\n=> /path\n# heading";
+    let ast = Ast::from_string(source);
+
+    assert_eq!(ast.inner(), &vec![Node::PreformattedText {
+      alt_text: Some("alt".to_string()),
+      text:     "* item\n=> /path\n# heading".to_string(),
+    }]);
+    assert_eq!(ast.to_gemtext(), source);
+
+    let source_with_final_newline = "```alt\ncode\n";
+    let ast = Ast::from_string(source_with_final_newline);
+
+    assert_eq!(ast.inner(), &vec![Node::PreformattedText {
+      alt_text: Some("alt".to_string()),
+      text:     "code\n".to_string(),
+    }]);
+    assert_eq!(ast.to_gemtext(), source_with_final_newline);
+  }
+
+  #[test]
+  fn preserves_canonical_line_round_trips() {
+    for source in [
+      "",
+      "plain",
+      "plain\n",
+      "plain\n\n",
+      "\n",
+      "\n\n",
+      "* item\n*  indented\nnext",
+      "* item\n\n",
+      "# heading\n###\n> quoted",
+      "```\n```\n",
+      "```\ncode\n```",
+      "```\ncode\n```\n\n",
+      "```\ncode\n",
+      "```",
+      "```\n",
+      "```\n\n",
+      "plain\r\n\r\n* item\r\n",
+      "```\r\ncode\r\n```\r\n",
+    ] {
+      assert_eq!(Ast::from_string(source).to_gemtext(), source, "{source:?}");
     }
   }
 }
