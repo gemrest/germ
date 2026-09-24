@@ -1,6 +1,7 @@
 use {
   crate::request::{
-    RequestOptions, Response, request_line, trust::client_config,
+    DEFAULT_GEMINI_PORT, RequestOptions, Response, request_line,
+    trust::{CertificateStore, check_tofu, client_config, tofu_client_config},
   },
   std::{
     io::{self, Read, Write},
@@ -118,10 +119,55 @@ pub fn request_with_options(
   url: &url::Url,
   options: &RequestOptions,
 ) -> anyhow::Result<Response> {
+  request_with_config(
+    url,
+    options,
+    client_config(options.root_certificates.clone()),
+    |_, _, _| Ok(()),
+  )
+}
+
+/// Makes a request using a caller-owned trust-on-first-use certificate store.
+///
+/// The first verified certificate is saved before the request URL is sent.
+/// Later requests require the same certificate. An expired certificate may be
+/// replaced; an unexpected change before expiry returns an error. The store
+/// must persist the certificate for this policy to work across process runs.
+/// TOFU uses the timeout and response size limits in `options` and ignores
+/// `options.root_certificates`.
+///
+/// # Errors
+///
+/// Returns an error for TLS or pin validation, store failure, timeout,
+/// oversized response, or malformed response.
+pub fn request_with_tofu(
+  url: &url::Url,
+  store: &mut dyn CertificateStore,
+  options: &RequestOptions,
+) -> anyhow::Result<Response> {
+  request_with_config(
+    url,
+    options,
+    tofu_client_config(),
+    |certificate, host, port| check_tofu(store, host, port, certificate),
+  )
+}
+
+fn request_with_config(
+  url: &url::Url,
+  options: &RequestOptions,
+  config: rustls::ClientConfig,
+  check_certificate: impl FnOnce(
+    Option<&rustls::Certificate>,
+    &str,
+    u16,
+  ) -> anyhow::Result<()>,
+) -> anyhow::Result<Response> {
   let request_line = request_line(url)?;
   let domain = url
     .domain()
     .ok_or_else(|| anyhow::anyhow!("Invalid URL: missing domain"))?;
+  let port = url.port().unwrap_or(DEFAULT_GEMINI_PORT);
   let deadline = Instant::now()
     .checked_add(options.timeout)
     .ok_or_else(|| anyhow::anyhow!("Gemini request timeout is too large"))?;
@@ -129,7 +175,7 @@ pub fn request_with_options(
     io::Error::new(io::ErrorKind::AddrNotAvailable, "No server address found");
   let mut connected_stream = None;
 
-  for address in (domain, url.port().unwrap_or(1965)).to_socket_addrs()? {
+  for address in (domain, port).to_socket_addrs()? {
     match TcpStream::connect_timeout(&address, remaining_time(deadline)?) {
       Ok(stream) => {
         connected_stream = Some(stream);
@@ -144,10 +190,16 @@ pub fn request_with_options(
     stream: connected_stream.ok_or(connection_error)?,
     deadline,
   };
-  let mut connection = rustls::ClientConnection::new(
-    Arc::new(client_config(options.root_certificates.clone())),
-    domain.try_into()?,
+  let mut connection =
+    rustls::ClientConnection::new(Arc::new(config), domain.try_into()?)?;
+
+  connection.complete_io(&mut stream)?;
+  check_certificate(
+    connection.peer_certificates().and_then(|chain| chain.first()),
+    domain,
+    port,
   )?;
+
   let mut tls = rustls::Stream::new(&mut connection, &mut stream);
 
   tls.write_all(request_line.as_bytes())?;

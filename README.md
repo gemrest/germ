@@ -52,6 +52,19 @@ the header. To change these limits or the trusted roots, set the fields of
 `request::non_blocking::request_with_options`. The blocking system DNS lookup
 may outlast the timeout before it returns.
 
+For trust on first use, implement `request::CertificateStore` with durable
+storage keyed by hostname and port, then pass it to
+`blocking::request_with_tofu` or `non_blocking::request_with_tofu` alongside
+`RequestOptions`. These methods verify the presented certificate and complete
+the TLS handshake before saving a first-use certificate or checking an existing
+one, and before sending the URL. They reject an unexpected certificate change
+until the stored certificate expires. An expired certificate is replaced after
+the new one passes validation. The store must persist each update before
+returning; callers can remove a pin deliberately when changing trust early.
+Store methods run synchronously, including in the async request path.
+TOFU uses the timeout and response size limits from `RequestOptions` but
+ignores its `root_certificates` field.
+
 HTML conversion escapes Gemtext content. HTML and Markdown conversion emit
 links for relative targets and Gemini, Gopher, HTTP, HTTPS, mailto, and FTP
 URLs; other schemes are shown as text. Markdown conversion also escapes link

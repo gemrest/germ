@@ -3,6 +3,7 @@
 use std::time::Duration;
 
 const MAX_REQUEST_URL_BYTES: usize = 1024;
+const DEFAULT_GEMINI_PORT: u16 = 1965;
 
 mod response;
 mod status;
@@ -16,13 +17,14 @@ mod trust;
 pub use {
   response::Response,
   status::{Status, StatusCategory},
-  trust::default_root_certificates,
+  trust::{CertificateStore, default_root_certificates},
 };
 
-/// Configure both blocking and async Gemini requests.
+/// Configures time and size limits for all requests and roots for CA trust.
 #[derive(Clone, Debug)]
 pub struct RequestOptions {
-  /// Set trusted certificate authorities; defaults to the Mozilla CA roots.
+  /// Sets trusted certificate authorities for CA-verified requests.
+  /// Defaults to Mozilla roots; TOFU requests ignore this field.
   pub root_certificates:  rustls::RootCertStore,
   /// Limit elapsed time for the request; defaults to 30 seconds.
   pub timeout:            Duration,

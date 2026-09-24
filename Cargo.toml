@@ -60,7 +60,7 @@ required-features = ["ast", "blocking"]
 
 [dependencies]
 anyhow = { version = "1.0.98", optional = true } # `Result`
-rustls = { version = "0.21.12", optional = true } # TLS
+rustls = { version = "0.21.12", optional = true, features = ["dangerous_configuration"] } # TLS
 webpki-roots = { version = "1.0.9", optional = true } # CA certificates
 tokio-rustls = { version = "0.24.1", optional = true } # Non-blocking TLS
 tokio = { version = "1.45.1", optional = true, default-features = false, features = [

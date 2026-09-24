@@ -1,6 +1,7 @@
 use {
   crate::request::{
-    RequestOptions, Response, request_line, trust::client_config,
+    DEFAULT_GEMINI_PORT, RequestOptions, Response, request_line,
+    trust::{CertificateStore, check_tofu, client_config, tofu_client_config},
   },
   std::sync::Arc,
   tokio::io::{AsyncReadExt, AsyncWriteExt},
@@ -66,21 +67,71 @@ pub async fn request_with_options(
   url: &url::Url,
   options: &RequestOptions,
 ) -> anyhow::Result<Response> {
+  request_with_config(
+    url,
+    options,
+    client_config(options.root_certificates.clone()),
+    |_, _, _| Ok(()),
+  )
+  .await
+}
+
+/// Makes a request using a caller-owned trust-on-first-use certificate store.
+///
+/// The first verified certificate is saved before the request URL is sent.
+/// Later requests require the same certificate. An expired certificate may be
+/// replaced; an unexpected change before expiry returns an error. The store
+/// must persist the certificate for this policy to work across process runs.
+/// TOFU uses the timeout and response size limits in `options` and ignores
+/// `options.root_certificates`.
+///
+/// # Errors
+///
+/// Returns an error for TLS or pin validation, store failure, timeout,
+/// oversized response, or malformed response.
+pub async fn request_with_tofu(
+  url: &url::Url,
+  store: &mut dyn CertificateStore,
+  options: &RequestOptions,
+) -> anyhow::Result<Response> {
+  request_with_config(
+    url,
+    options,
+    tofu_client_config(),
+    |certificate, host, port| check_tofu(store, host, port, certificate),
+  )
+  .await
+}
+
+async fn request_with_config(
+  url: &url::Url,
+  options: &RequestOptions,
+  config: rustls::ClientConfig,
+  check_certificate: impl FnOnce(
+    Option<&rustls::Certificate>,
+    &str,
+    u16,
+  ) -> anyhow::Result<()>,
+) -> anyhow::Result<Response> {
   let request_line = request_line(url)?;
   let domain = url
     .domain()
     .ok_or_else(|| anyhow::anyhow!("Invalid URL: missing domain"))?;
   let server_name = rustls::ServerName::try_from(domain)?;
+  let port = url.port().unwrap_or(DEFAULT_GEMINI_PORT);
 
   tokio::time::timeout(options.timeout, async {
-    let address = (domain, url.port().unwrap_or(1965));
+    let address = (domain, port);
     let stream = tokio::net::TcpStream::connect(address).await?;
-    let connector = tokio_rustls::TlsConnector::from(Arc::new(client_config(
-      options.root_certificates.clone(),
-    )));
+    let connector = tokio_rustls::TlsConnector::from(Arc::new(config));
     let mut tls = connector.connect(server_name, stream).await?;
     let cipher_suite = tls.get_mut().1.negotiated_cipher_suite();
 
+    check_certificate(
+      tls.get_ref().1.peer_certificates().and_then(|chain| chain.first()),
+      domain,
+      port,
+    )?;
     tls.write_all(request_line.as_bytes()).await?;
 
     let mut response_bytes = Vec::new();

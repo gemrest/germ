@@ -6,6 +6,7 @@ use {
     StreamOwned,
   },
   std::{
+    collections::HashMap,
     io::{self, Read, Write},
     net::TcpListener,
     sync::Arc,
@@ -14,6 +15,34 @@ use {
   },
   url::Url,
 };
+
+#[derive(Default)]
+struct MemoryCertificates {
+  certificates: HashMap<(String, u16), Vec<u8>>,
+  reject_save:  bool,
+}
+
+impl germ::request::CertificateStore for MemoryCertificates {
+  fn load(
+    &mut self,
+    hostname: &str,
+    port: u16,
+  ) -> anyhow::Result<Option<Vec<u8>>> {
+    Ok(self.certificates.get(&(hostname.to_owned(), port)).cloned())
+  }
+
+  fn save(
+    &mut self,
+    hostname: &str,
+    port: u16,
+    certificate: &[u8],
+  ) -> anyhow::Result<()> {
+    anyhow::ensure!(!self.reject_save, "Certificate store rejected save");
+    self.certificates.insert((hostname.to_owned(), port), certificate.to_vec());
+
+    Ok(())
+  }
+}
 
 fn assert_certificate_error(error: &anyhow::Error, expected: CertificateError) {
   let actual = error
@@ -31,6 +60,16 @@ fn assert_handshake_rejected(server: JoinHandle<io::Result<Vec<u8>>>) {
   let error = server.join().unwrap().unwrap_err();
 
   assert_ne!(error.kind(), io::ErrorKind::TimedOut);
+}
+
+fn assert_no_request_sent(server: JoinHandle<io::Result<Vec<u8>>>) {
+  match server.join().unwrap() {
+    Ok(bytes) => assert!(bytes.is_empty()),
+    Err(error) => assert!(matches!(
+      error.kind(),
+      io::ErrorKind::UnexpectedEof | io::ErrorKind::ConnectionReset
+    )),
+  }
 }
 
 fn spawn_tls_server(
@@ -98,6 +137,198 @@ fn options_with_certificate(
   options.root_certificates.add(certificate).unwrap();
 
   options
+}
+
+#[cfg(feature = "blocking")]
+#[test]
+fn blocking_tofu_remembers_first_certificate() {
+  let (url, certificate, server) = spawn_tls_server("localhost");
+  let mut store = MemoryCertificates::default();
+  let response = germ::request::blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .unwrap();
+
+  assert_eq!(response.content().as_deref(), Some("hello"));
+  assert_eq!(
+    store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+    Some(&certificate.0)
+  );
+  assert!(server.join().unwrap().is_ok());
+}
+
+#[cfg(feature = "blocking")]
+#[test]
+fn blocking_tofu_accepts_a_previously_pinned_certificate() {
+  let (url, certificate, server) = spawn_tls_server("localhost");
+  let mut store = MemoryCertificates::default();
+
+  store
+    .certificates
+    .insert(("localhost".to_owned(), url.port().unwrap()), certificate.0);
+
+  let response = germ::request::blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .unwrap();
+
+  assert_eq!(response.content().as_deref(), Some("hello"));
+  assert!(server.join().unwrap().is_ok());
+}
+
+#[cfg(feature = "blocking")]
+#[test]
+fn blocking_tofu_rejects_changed_certificate_before_sending_url() {
+  let (url, certificate, server) = spawn_tls_server("localhost");
+  let different_certificate =
+    rcgen::generate_simple_self_signed(vec!["localhost".to_owned()])
+      .unwrap()
+      .serialize_der()
+      .unwrap();
+  let mut store = MemoryCertificates::default();
+
+  store.certificates.insert(
+    ("localhost".to_owned(), url.port().unwrap()),
+    different_certificate.clone(),
+  );
+
+  let error = germ::request::blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .unwrap_err();
+
+  assert!(error.to_string().contains("certificate changed"));
+  assert_ne!(different_certificate, certificate.0);
+  assert_eq!(
+    store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+    Some(&different_certificate)
+  );
+  assert_no_request_sent(server);
+}
+
+#[cfg(feature = "blocking")]
+#[test]
+fn blocking_tofu_rejects_store_failure_before_sending_url() {
+  let (url, _, server) = spawn_tls_server("localhost");
+  let mut store =
+    MemoryCertificates { reject_save: true, ..Default::default() };
+  let error = germ::request::blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .unwrap_err();
+
+  assert!(error.to_string().contains("rejected save"));
+  assert_no_request_sent(server);
+}
+
+#[cfg(feature = "blocking")]
+#[test]
+fn blocking_tofu_rejects_wrong_hostname() {
+  let (url, _, server) = spawn_tls_server("elsewhere.test");
+  let mut store = MemoryCertificates::default();
+  let error = germ::request::blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .unwrap_err();
+
+  assert_certificate_error(&error, CertificateError::NotValidForName);
+  assert!(store.certificates.is_empty());
+  assert_handshake_rejected(server);
+}
+
+#[cfg(feature = "request")]
+#[tokio::test]
+async fn async_tofu_remembers_first_certificate() {
+  let (url, certificate, server) = spawn_tls_server("localhost");
+  let mut store = MemoryCertificates::default();
+  let response = germ::request::non_blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .await
+  .unwrap();
+
+  assert_eq!(response.content().as_deref(), Some("hello"));
+  assert_eq!(
+    store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+    Some(&certificate.0)
+  );
+  assert!(server.join().unwrap().is_ok());
+}
+
+#[cfg(feature = "request")]
+#[tokio::test]
+async fn async_tofu_rejects_changed_certificate_before_sending_url() {
+  let (url, _, server) = spawn_tls_server("localhost");
+  let different_certificate =
+    rcgen::generate_simple_self_signed(vec!["localhost".to_owned()])
+      .unwrap()
+      .serialize_der()
+      .unwrap();
+  let mut store = MemoryCertificates::default();
+
+  store.certificates.insert(
+    ("localhost".to_owned(), url.port().unwrap()),
+    different_certificate,
+  );
+
+  let error = germ::request::non_blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .await
+  .unwrap_err();
+
+  assert!(error.to_string().contains("certificate changed"));
+  assert_no_request_sent(server);
+}
+
+#[cfg(feature = "request")]
+#[tokio::test]
+async fn async_tofu_rejects_store_failure_before_sending_url() {
+  let (url, _, server) = spawn_tls_server("localhost");
+  let mut store =
+    MemoryCertificates { reject_save: true, ..Default::default() };
+  let error = germ::request::non_blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .await
+  .unwrap_err();
+
+  assert!(error.to_string().contains("rejected save"));
+  assert_no_request_sent(server);
+}
+
+#[cfg(feature = "request")]
+#[tokio::test]
+async fn async_tofu_rejects_wrong_hostname() {
+  let (url, _, server) = spawn_tls_server("elsewhere.test");
+  let mut store = MemoryCertificates::default();
+  let error = germ::request::non_blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .await
+  .unwrap_err();
+
+  assert_certificate_error(&error, CertificateError::NotValidForName);
+  assert!(store.certificates.is_empty());
+  assert_handshake_rejected(server);
 }
 
 #[cfg(feature = "blocking")]
