@@ -1,94 +1,63 @@
-//! This example demonstrates a chain of Germ's capabilities by fetching a
-//! Gemini capsule, parsing the response content into an abstract syntax tree,
-//! and converting the abstract syntax tree back to Gemtext, identical to the
-//! Gemini response content.
+//! Fetches a Gemtext response and checks its AST round trip.
 
 use std::env;
 
-fn main() {
-  // Try to obtain a URL from the command line arguments or use the default one
+fn main() -> anyhow::Result<()> {
   let url_string =
-    env::args().nth(1).unwrap_or_else(|| "gemini://fuwn.me/".to_string());
-  // Form a valid URL to a Gemini capsule
-  let url = match url::Url::parse(&url_string) {
-    Ok(url) => url,
-    Err(error) => {
-      eprintln!("Error parsing URL '{}': {}", url_string, error);
-      std::process::exit(1);
-    }
-  };
+    env::args().nth(1).unwrap_or_else(|| "gemini://fuwn.me/".to_owned());
+  let url = url::Url::parse(&url_string)?;
+  let response = germ::request::blocking::request(&url)?;
 
-  // Perform a blocking request to the Gemini capsule
-  let request = germ::request::blocking::request(&url);
+  anyhow::ensure!(
+    response.status().category()
+      == Some(germ::request::StatusCategory::Success),
+    "Gemini response was not successful"
+  );
 
-  match request {
-    // If the request was successful:
-    Ok(response) => {
-      // Obtain the content of the Gemini response
-      let response_content =
-        &*response.content().clone().unwrap_or_else(|| "".to_string());
-      // Parse the Gemini response content into an abstract syntax tree
-      let ast = germ::ast::Ast::from_string(response_content);
-      // Convert the abstract syntax tree back to Gemtext, identical to the
-      // Gemini response content, constructed from the parsed abstract syntax
-      // tree
-      let gemtext = ast.to_gemtext();
+  let response_meta = response.meta();
+  let mime_type = response_meta.split(';').next().unwrap_or_default().trim();
 
-      // Print the Gemtext
-      println!("{}", gemtext);
+  anyhow::ensure!(
+    mime_type.eq_ignore_ascii_case("text/gemini"),
+    "Gemini response is not Gemtext"
+  );
 
-      // Check if the response content and reconstruction are identical
-      if response_content == gemtext {
-        println!(
-          "\nValidation: Response content and reconstruction are identical"
-        );
-      } else {
-        println!("\nValidation: Response content and reconstruction differ");
-        print_diff(response_content, &gemtext);
-      }
-    }
-    // If the request was unsuccessful, print an error message and exit
-    Err(error) => {
-      eprintln!("Error fetching '{}': {}", url_string, error);
-      std::process::exit(1);
-    }
+  let response_bytes = response.content_bytes().unwrap_or_default();
+  let original = std::str::from_utf8(response_bytes)?;
+  let reconstructed = germ::ast::Ast::from_owned(original).to_gemtext();
+
+  print!("{reconstructed}");
+
+  if original != reconstructed {
+    print_diff(original, &reconstructed);
+    anyhow::bail!("Gemtext reconstruction differs from the response");
   }
+
+  eprintln!("Gemtext reconstruction matches the response");
+
+  Ok(())
 }
 
 fn print_diff(original: &str, reconstructed: &str) {
-  use std::io::{self, Write};
+  let mut original_lines = original.split('\n');
+  let mut reconstructed_lines = reconstructed.split('\n');
+  let mut line_number = 1;
 
-  let mut stdout = io::stdout();
-  let original_lines = original.lines().collect::<Vec<&str>>();
-  let reconstructed_lines = reconstructed.lines().collect::<Vec<&str>>();
-  let max_lines = original_lines.len().max(reconstructed_lines.len());
-  let mut has_printed_diff = false;
+  loop {
+    let original_line = original_lines.next();
+    let reconstructed_line = reconstructed_lines.next();
 
-  for i in 0..max_lines {
-    let original_line = original_lines.get(i).unwrap_or(&"");
-    let reconstructed_line = reconstructed_lines.get(i).unwrap_or(&"");
+    if original_line.is_none() && reconstructed_line.is_none() {
+      break;
+    }
 
     if original_line != reconstructed_line {
-      if has_printed_diff {
-        let _ = writeln!(stdout);
-      }
-
-      let _ = writeln!(stdout, "Line {}:", i + 1);
-      let _ = writeln!(stdout, "  Original:      '{}'", original_line);
-      let _ = writeln!(stdout, "  Reconstructed: '{}'", reconstructed_line);
-
-      has_printed_diff = true;
-    }
-  }
-
-  if original_lines.len() != reconstructed_lines.len() {
-    if has_printed_diff {
-      let _ = writeln!(stdout);
+      eprintln!(
+        "Line {line_number}: original {original_line:?}, reconstructed \
+         {reconstructed_line:?}"
+      );
     }
 
-    let _ = writeln!(stdout, "Length difference:");
-    let _ = writeln!(stdout, "  Original:      {} lines", original_lines.len());
-    let _ =
-      writeln!(stdout, "  Reconstructed: {} lines", reconstructed_lines.len());
+    line_number += 1;
   }
 }

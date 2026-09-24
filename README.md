@@ -4,41 +4,23 @@
 [![docs.rs](https://docs.rs/germ/badge.svg)](https://docs.rs/germ)
 [![github.com](https://github.com/gemrest/germ/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/gemrest/germ/actions/workflows/check.yaml)
 
-The Ultimate Gemini Toolkit
-
-Germ is a toolkit for the Gemini protocol which aims to have a little something
-for everyone. At the moment, Germ has **ZERO** dependencies unless you use the
-`request` or `blocking` feature, and Germ will continue to try its hardest to
-have as few dependencies as possible.
-
-## Features
-
-- AST builder to easily construct and manipulate AST trees from raw Gemtext
-- Converters to easily convert from Gemtext to markup formats such as HTML or
-  Markdown
-- Blocking and non-blocking request suite
-- Structured meta section manipulation
-- And more!
-
-Check out the rest of the features in the Features section under Usage
+Germ parses and generates Gemtext, converts it to HTML or Markdown, handles
+response metadata, and makes Gemini requests. Its default features include
+the request client and its network and TLS dependencies. Disable default
+features to use `ast`, `convert`, `meta`, or `quick` without normal dependencies.
 
 ## Usage
 
-Current version:
-[![crates.io](https://img.shields.io/crates/v/germ.svg)](https://crates.io/crates/germ)
+```toml
+[dependencies]
+germ = "0.4.8"
+```
+
+To select features without the default request client:
 
 ```toml
-# Cargo.toml
-
 [dependencies]
-# To enable only the base (default) features: ast, convert, meta, request
-# germ = "*" # Use current version show above!
-
-# To enable only certain features
-[dependencies.germ]
-version = "*" # Use current version show above!
-default-features = false
-features = ["ast"] # Enable the features you would like to use!
+germ = { version = "0.4.8", default-features = false, features = ["ast"] }
 ```
 
 ### Features
@@ -47,12 +29,12 @@ features = ["ast"] # Enable the features you would like to use!
 | ---------- | --------------------------------------------------------------------- |
 | `default`  | `ast`, `convert`, `meta`, `request`                                   |
 | `ast`      | Construct AST trees from raw Gemtext                                  |
-| `blocking` | Blocking equivalent of `request`                                      |
-| `convert`  | Convert Gemtext to markup formats such as HTML or Markdown            |
-| `request`  | Make Gemini requests, get sane, structured results                    |
-| `meta`     | Structure-ise a Gemini response's meta section                        |
-| `macros`   | Macros to aid with various Germ-related functionalities               |
-| `quick`    | Tiny functions to create valid Gemtext elements from structured input |
+| `blocking` | Make blocking Gemini requests                                          |
+| `convert`  | Convert Gemtext to HTML or Markdown                                    |
+| `request`  | Make asynchronous Gemini requests                                      |
+| `meta`     | Parse and format Gemini response metadata                              |
+| `macros`   | Generate AST and converted output with macros                          |
+| `quick`    | Build individual Gemtext lines                                         |
 
 Gemini requests verify server certificates against Mozilla CA roots by default.
 For a self-signed capsule, add its certificate in DER form to a
@@ -70,17 +52,26 @@ the header. To change these limits or the trusted roots, set the fields of
 `request::non_blocking::request_with_options`. The blocking system DNS lookup
 may outlast the timeout before it returns.
 
-HTML conversion escapes Gemtext content. It makes relative links and Gemini,
-Gopher, HTTP, HTTPS, mailto, and FTP links clickable; other schemes are shown
-as text.
+HTML conversion escapes Gemtext content. HTML and Markdown conversion emit
+links for relative targets and Gemini, Gopher, HTTP, HTTPS, mailto, and FTP
+URLs; other schemes are shown as text. Markdown conversion also escapes link
+labels and destinations.
+
+`Meta` parses quoted MIME parameters and quotes values as needed when formatting
+them.
+
+`quick::link(url, label)` takes the URL first and an optional label second.
+
+Unknown Gemini status codes retain their numeric value. Use
+`Status::category()` to inspect the response category indicated by the first
+digit.
 
 ### Examples
 
-Thoroughly commented examples can be found within the
+Runnable examples can be found within the
 [`examples/`](https://github.com/gemrest/germ/tree/main/examples) directory.
 
-Examples can be run by name using the example just task.
-(e.g., `just example ast_to_gemtext`)
+Run one with `just example ast_to_gemtext`.
 
 ## License
 
