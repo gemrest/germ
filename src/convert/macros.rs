@@ -1,13 +1,13 @@
-/// Convert Gemtext into HTML
+/// Converts Gemtext into HTML.
 ///
 /// # Examples
 ///
 /// ```rust
-/// // Using a value
 /// assert_eq!(
 ///   germ::gemini_to_html!("=> /to hello !"),
 ///   "<a href=\"/to\">hello !</a><br>",
 /// );
+/// ```
 #[macro_export]
 macro_rules! gemini_to_html {
   ($gemini:expr) => {
@@ -24,16 +24,13 @@ macro_rules! gemini_to_html {
   };
 }
 
-/// Convert Gemtext into Markdown
+/// Converts Gemtext into Markdown.
 ///
 /// # Examples
 ///
 /// ```rust
-/// assert_eq!(
-///   // Using a value
-///   germ::gemini_to_md!("=> /to hello !"),
-///   "[hello !](/to)\n",
-/// );
+/// assert_eq!(germ::gemini_to_md!("=> /to hello !"), "[hello \\!](/to)\n",);
+/// ```
 #[macro_export]
 macro_rules! gemini_to_md {
   ($gemini:expr) => {

@@ -125,7 +125,56 @@ mod test {
   fn convert_from_string_to_markdown_single_link() {
     assert_eq!(
       from_string("=> /to hello !", &Target::Markdown),
-      "[hello !](/to)\n",
+      "[hello \\!](/to)\n",
+    );
+  }
+
+  #[test]
+  fn markdown_escapes_literal_text_in_every_node() {
+    let literal = "<script>*bold* &copy; 1. item ![image](x)".to_owned();
+    let ast = Ast::from_nodes(vec![
+      Node::Text(literal.clone()),
+      Node::Heading { level: 1, text: literal.clone() },
+      Node::List(vec![literal.clone()]),
+      Node::Blockquote(literal),
+    ]);
+    let escaped = r"\<script\>\*bold\* \&copy; 1\. item \!\[image\](x\)";
+
+    assert_eq!(
+      from_ast(&ast, &Target::Markdown),
+      format!("{escaped}\n# {escaped}\n- {escaped}\n> {escaped}\n"),
+    );
+  }
+
+  #[test]
+  fn markdown_escapes_gemtext_lines_that_look_like_markdown_blocks() {
+    assert_eq!(
+      from_string(
+        "#### heading\n- item\n1. item\n===\n<script>",
+        &Target::Markdown
+      ),
+      "\\#\\#\\#\\# heading\n\\- item\n1\\. item\n\\=\\=\\=\n\\<script\\>\n",
+    );
+  }
+
+  #[test]
+  fn markdown_preserves_leading_and_trailing_spaces_as_text() {
+    assert_eq!(
+      from_string("    indented\ntext  ", &Target::Markdown),
+      "&#32;   indented\ntext &#32;\n",
+    );
+  }
+
+  #[test]
+  fn markdown_fence_cannot_close_inside_preformatted_content() {
+    let ast = Ast::from_nodes(vec![Node::PreformattedText {
+      alt_text: Some("ruby`~~~\nunsafe".to_owned()),
+      text:     "before\n~~~~\nafter".to_owned(),
+    }]);
+
+    assert_eq!(
+      from_ast(&ast, &Target::Markdown),
+      "~~~~~ ruby`~~~unsafe\nbefore\n~~~~\nafter\n~~~~~\n",
     );
   }
 
@@ -169,7 +218,7 @@ mod test {
     );
     assert_eq!(
       from_string("```alt\n* item\n# heading", &Target::Markdown),
-      "```alt\n* item\n# heading\n```\n"
+      "~~~ alt\n* item\n# heading\n~~~\n"
     );
     assert_eq!(
       from_string("```alt\ncode\n", &Target::HTML),
@@ -181,13 +230,13 @@ mod test {
   fn markdown_separates_a_fenced_block_from_following_text() {
     assert_eq!(
       from_string("```\ncode\n```\nafter", &Target::Markdown),
-      "```\ncode\n```\nafter\n"
+      "~~~\ncode\n~~~\nafter\n"
     );
   }
 
   #[cfg(feature = "macros")]
   #[test]
   fn convert_from_string_to_markdown_single_macro_expression() {
-    assert_eq!(gemini_to_md!("=> /to hello !"), "[hello !](/to)\n",);
+    assert_eq!(gemini_to_md!("=> /to hello !"), "[hello \\!](/to)\n",);
   }
 }
