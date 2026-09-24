@@ -68,6 +68,7 @@ tokio = { version = "1.45.1", optional = true, default-features = false, feature
   "io-util",
   "rt-multi-thread",
   "macros",
+  "time",
 ] } # Non-blocking I/O
 url = { version = "2.5.4", optional = true } # URL Validation
 

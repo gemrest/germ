@@ -63,6 +63,13 @@ exact certificate fingerprint pin. Save and review the certificate separately
 before trusting it; the default request functions do not remember certificates
 between calls.
 
+Requests time out after 30 seconds and have a 16 MiB response limit, including
+the header. To change these limits or the trusted roots, set the fields of
+`request::RequestOptions` and pass it to
+`request::blocking::request_with_options` or
+`request::non_blocking::request_with_options`. The blocking system DNS lookup
+may outlast the timeout before it returns.
+
 HTML conversion escapes Gemtext content. It makes relative links and Gemini,
 Gopher, HTTP, HTTPS, mailto, and FTP links clickable; other schemes are shown
 as text.
