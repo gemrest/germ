@@ -27,20 +27,33 @@ pub fn list_item(text: &(impl ToString + ?Sized)) -> String {
 
 #[must_use]
 pub fn list_items(items: &[&(impl ToString + ?Sized)]) -> String {
-  items
-    .iter()
-    .map(|item| list_item(&item.to_string()))
-    .collect::<Vec<_>>()
-    .join("\n")
+  let mut gemtext = String::new();
+
+  for (index, item) in items.iter().enumerate() {
+    if index > 0 {
+      gemtext.push('\n');
+    }
+
+    gemtext.push_str("* ");
+    gemtext.push_str(&item.to_string());
+  }
+
+  gemtext
 }
 
+/// Builds a link line with a URL and an optional label.
 #[must_use]
-pub fn link(text: &(impl ToString + ?Sized), location: Option<&str>) -> String {
-  format!(
-    "=> {}{}",
-    text.to_string(),
-    location.map_or_else(String::new, |l| format!(" {l}"))
-  )
+pub fn link(url: &(impl ToString + ?Sized), label: Option<&str>) -> String {
+  let mut gemtext = String::from("=> ");
+
+  gemtext.push_str(&url.to_string());
+
+  if let Some(label) = label {
+    gemtext.push(' ');
+    gemtext.push_str(label);
+  }
+
+  gemtext
 }
 
 #[must_use]

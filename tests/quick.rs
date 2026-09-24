@@ -32,10 +32,10 @@ mod test {
 
   #[test]
   fn link_variants() {
-    assert_eq!(quick::link("Soup", None), "=> Soup");
+    assert_eq!(quick::link("gemini://soup.com", None), "=> gemini://soup.com");
     assert_eq!(
-      quick::link("Soup", Some("gemini://soup.com")),
-      "=> Soup gemini://soup.com"
+      quick::link("gemini://soup.com", Some("Soup")),
+      "=> gemini://soup.com Soup"
     );
   }
 
