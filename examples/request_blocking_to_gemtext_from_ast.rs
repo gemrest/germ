@@ -1,12 +1,46 @@
 //! Fetches a Gemtext response and checks its AST round trip.
+//! This example's TOFU certificate store lasts only for one run.
 
-use std::env;
+use {
+  germ::request::{CertificateStore, RequestOptions},
+  std::{collections::HashMap, env},
+};
+
+#[derive(Default)]
+struct MemoryCertificates(HashMap<(String, u16), Vec<u8>>);
+
+impl CertificateStore for MemoryCertificates {
+  fn load(
+    &mut self,
+    hostname: &str,
+    port: u16,
+  ) -> anyhow::Result<Option<Vec<u8>>> {
+    Ok(self.0.get(&(hostname.to_owned(), port)).cloned())
+  }
+
+  fn save(
+    &mut self,
+    hostname: &str,
+    port: u16,
+    certificate: &[u8],
+  ) -> anyhow::Result<()> {
+    self.0.insert((hostname.to_owned(), port), certificate.to_vec());
+
+    Ok(())
+  }
+}
 
 fn main() -> anyhow::Result<()> {
-  let url_string =
-    env::args().nth(1).unwrap_or_else(|| "gemini://fuwn.me/".to_owned());
+  let url_string = env::args()
+    .nth(1)
+    .unwrap_or_else(|| "gemini://geminiprotocol.net/".to_owned());
   let url = url::Url::parse(&url_string)?;
-  let response = germ::request::blocking::request(&url)?;
+  let mut certificates = MemoryCertificates::default();
+  let response = germ::request::blocking::request_with_tofu(
+    &url,
+    &mut certificates,
+    &RequestOptions::default(),
+  )?;
 
   anyhow::ensure!(
     response.status().category()
@@ -24,16 +58,23 @@ fn main() -> anyhow::Result<()> {
 
   let response_bytes = response.content_bytes().unwrap_or_default();
   let original = std::str::from_utf8(response_bytes)?;
-  let reconstructed = germ::ast::Ast::from_owned(original).to_gemtext();
+  let ast = germ::ast::Ast::from_string(original);
+  let reconstructed = ast.to_gemtext();
+  let reparsed = germ::ast::Ast::from_string(&reconstructed);
 
-  print!("{reconstructed}");
+  anyhow::ensure!(
+    ast.inner() == reparsed.inner(),
+    "Gemtext reconstruction changed the parsed nodes"
+  );
 
   if original != reconstructed {
+    eprintln!("Gemtext source formatting was normalised:");
     print_diff(original, &reconstructed);
-    anyhow::bail!("Gemtext reconstruction differs from the response");
+  } else {
+    eprintln!("Gemtext reconstruction matches the response exactly");
   }
 
-  eprintln!("Gemtext reconstruction matches the response");
+  print!("{reconstructed}");
 
   Ok(())
 }
