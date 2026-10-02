@@ -2,9 +2,10 @@ use {
   rustls::{
     Certificate, CertificateError, ClientConfig, Error, OwnedTrustAnchor,
     RootCertStore, ServerName,
-    client::{ServerCertVerified, ServerCertVerifier, WebPkiVerifier},
+    client::{ServerCertVerified, ServerCertVerifier},
   },
   std::{sync::Arc, time::SystemTime},
+  x509_cert::der::Decode,
 };
 
 /// Stores exact server certificates by hostname and port across requests.
@@ -44,26 +45,18 @@ impl ServerCertVerifier for TrustOnFirstUseVerifier {
   fn verify_server_cert(
     &self,
     end_entity: &Certificate,
-    intermediates: &[Certificate],
-    server_name: &ServerName,
-    scts: &mut dyn Iterator<Item = &[u8]>,
-    ocsp_response: &[u8],
-    now: SystemTime,
+    _intermediates: &[Certificate],
+    _server_name: &ServerName,
+    _scts: &mut dyn Iterator<Item = &[u8]>,
+    _ocsp_response: &[u8],
+    _now: SystemTime,
   ) -> Result<ServerCertVerified, Error> {
-    let mut roots = RootCertStore::empty();
+    x509_cert::Certificate::from_der(&end_entity.0)
+      .map_err(|_| Error::InvalidCertificate(CertificateError::BadEncoding))?;
 
-    roots.add(end_entity)?;
-
-    // The presented leaf is the temporary trust anchor; rustls still checks
-    // its validity, server name, and handshake signature.
-    WebPkiVerifier::new(roots, None).verify_server_cert(
-      end_entity,
-      intermediates,
-      server_name,
-      scts,
-      ocsp_response,
-      now,
-    )
+    // TOFU pins the exact certificate before sending the URL. Its expiry
+    // controls pin replacement; rustls verifies the TLS handshake signature.
+    Ok(ServerCertVerified::assertion())
   }
 }
 
@@ -86,7 +79,7 @@ pub fn check_tofu(
 
   match store.load(hostname, port)? {
     Some(previous) if previous == certificate.0 => Ok(()),
-    Some(previous) if previous_certificate_expired(&previous, hostname) =>
+    Some(previous) if previous_certificate_expired(&previous) =>
       store.save(hostname, port, &certificate.0),
     Some(_) =>
       anyhow::bail!("Gemini server certificate changed for {hostname}:{port}"),
@@ -94,29 +87,14 @@ pub fn check_tofu(
   }
 }
 
-fn previous_certificate_expired(certificate: &[u8], hostname: &str) -> bool {
-  let certificate = Certificate(certificate.to_vec());
-  let Ok(server_name) = ServerName::try_from(hostname) else {
+fn previous_certificate_expired(certificate: &[u8]) -> bool {
+  let Ok(certificate) = x509_cert::Certificate::from_der(certificate) else {
     return false;
   };
-  let mut roots = RootCertStore::empty();
+  let expires_at = SystemTime::UNIX_EPOCH
+    + certificate.tbs_certificate.validity.not_after.to_unix_duration();
 
-  if roots.add(&certificate).is_err() {
-    return false;
-  }
-
-  // Revalidate the stored certificate to detect expiry without parsing its
-  // validity dates separately.
-  let result = WebPkiVerifier::new(roots, None).verify_server_cert(
-    &certificate,
-    &[],
-    &server_name,
-    &mut std::iter::empty(),
-    &[],
-    SystemTime::now(),
-  );
-
-  matches!(result, Err(Error::InvalidCertificate(CertificateError::Expired)))
+  expires_at < SystemTime::now()
 }
 
 /// Return the Mozilla CA roots used by the default request functions.
@@ -153,9 +131,12 @@ pub fn client_config(roots: RootCertStore) -> ClientConfig {
 #[cfg(test)]
 mod tests {
   use {
-    super::{CertificateStore, check_tofu},
-    rustls::Certificate,
-    std::collections::HashMap,
+    super::{CertificateStore, TrustOnFirstUseVerifier, check_tofu},
+    rustls::{
+      Certificate, CertificateError, Error, ServerName,
+      client::ServerCertVerifier,
+    },
+    std::{collections::HashMap, time::SystemTime},
   };
 
   #[derive(Default)]
@@ -182,6 +163,51 @@ mod tests {
     }
   }
 
+  fn verify_certificate(
+    parameters: rcgen::CertificateParams,
+  ) -> Result<(), Error> {
+    let certificate = rcgen::Certificate::from_params(parameters).unwrap();
+    let certificate = Certificate(certificate.serialize_der().unwrap());
+
+    TrustOnFirstUseVerifier.verify_server_cert(
+      &certificate,
+      &[],
+      &ServerName::try_from("localhost").unwrap(),
+      &mut std::iter::empty(),
+      &[],
+      SystemTime::now(),
+    )?;
+
+    Ok(())
+  }
+
+  #[test]
+  fn accepts_certificate_with_unrelated_common_name() {
+    let mut parameters = rcgen::CertificateParams::default();
+
+    parameters
+      .distinguished_name
+      .push(rcgen::DnType::CommonName, "elsewhere.test");
+
+    verify_certificate(parameters).unwrap();
+  }
+
+  #[test]
+  fn rejects_malformed_certificate() {
+    let error = TrustOnFirstUseVerifier
+      .verify_server_cert(
+        &Certificate(vec![1, 2, 3]),
+        &[],
+        &ServerName::try_from("localhost").unwrap(),
+        &mut std::iter::empty(),
+        &[],
+        SystemTime::now(),
+      )
+      .unwrap_err();
+
+    assert_eq!(error, Error::InvalidCertificate(CertificateError::BadEncoding));
+  }
+
   #[test]
   fn pins_are_scoped_to_hostname_and_port() {
     let certificate = Certificate(vec![1, 2, 3]);
@@ -201,9 +227,11 @@ mod tests {
 
   #[test]
   fn replaces_an_expired_certificate() {
-    let mut parameters =
-      rcgen::CertificateParams::new(vec!["localhost".to_owned()]);
+    let mut parameters = rcgen::CertificateParams::default();
 
+    parameters.distinguished_name.push(rcgen::DnType::CommonName, "localhost");
+
+    parameters.is_ca = rcgen::IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
     parameters.not_before = rcgen::date_time_ymd(2018, 1, 1);
     parameters.not_after = rcgen::date_time_ymd(2019, 1, 1);
 

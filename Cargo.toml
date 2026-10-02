@@ -17,12 +17,12 @@ rust-version = "1.83.0"
 
 [features]
 ast = []
-blocking = ["rustls", "webpki-roots", "url", "anyhow"]
+blocking = ["rustls", "webpki-roots", "x509-cert", "url", "anyhow"]
 convert = ["ast"]
 default = ["ast", "convert", "meta", "request"]
 macros = ["ast", "convert"]
 meta = []
-request = ["rustls", "webpki-roots", "url", "anyhow", "tokio", "tokio-rustls"]
+request = ["rustls", "webpki-roots", "x509-cert", "url", "anyhow", "tokio", "tokio-rustls"]
 quick = []
 
 [[example]]
@@ -61,6 +61,7 @@ required-features = ["ast", "blocking"]
 anyhow = { version = "1.0.98", optional = true } # `Result`
 rustls = { version = "0.21.12", optional = true, features = ["dangerous_configuration"] } # TLS
 webpki-roots = { version = "1.0.9", optional = true } # CA certificates
+x509-cert = { version = "0.2.5", optional = true, default-features = false } # Certificate parsing
 tokio-rustls = { version = "0.24.1", optional = true } # Non-blocking TLS
 tokio = { version = "1.45.1", optional = true, default-features = false, features = [
   "net",

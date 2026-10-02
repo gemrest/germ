@@ -92,11 +92,26 @@ fn spawn_tls_server_with_response(
       .unwrap();
   let certificate_der = Certificate(certificate.serialize_der().unwrap());
   let private_key = PrivateKey(certificate.serialize_private_key_der());
-  let config = ServerConfig::builder()
+  let configuration = ServerConfig::builder()
     .with_safe_defaults()
     .with_no_client_auth()
     .with_single_cert(vec![certificate_der.clone()], private_key)
     .unwrap();
+
+  spawn_tls_server_with_configuration(
+    configuration,
+    certificate_der,
+    response_bytes,
+    response_delay,
+  )
+}
+
+fn spawn_tls_server_with_configuration(
+  configuration: ServerConfig,
+  certificate: Certificate,
+  response_bytes: Vec<u8>,
+  response_delay: Duration,
+) -> (Url, Certificate, JoinHandle<io::Result<Vec<u8>>>) {
   let listener = TcpListener::bind("127.0.0.1:0").unwrap();
   let url = Url::parse(&format!(
     "gemini://localhost:{}/",
@@ -108,7 +123,7 @@ fn spawn_tls_server_with_response(
 
     stream.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
 
-    let connection = ServerConnection::new(Arc::new(config)).unwrap();
+    let connection = ServerConnection::new(Arc::new(configuration)).unwrap();
     let mut tls = StreamOwned::new(connection, stream);
     let mut request_buffer = [0; 1024];
     let bytes_read = tls.read(&mut request_buffer)?;
@@ -123,7 +138,49 @@ fn spawn_tls_server_with_response(
     Ok(request_buffer[..bytes_read].to_vec())
   });
 
-  (url, certificate_der, server)
+  (url, certificate, server)
+}
+
+fn unnamed_ca_certificate() -> rcgen::Certificate {
+  let mut parameters = rcgen::CertificateParams::default();
+
+  parameters.distinguished_name = rcgen::DistinguishedName::new();
+  parameters.is_ca = rcgen::IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
+
+  rcgen::Certificate::from_params(parameters).unwrap()
+}
+
+fn spawn_certificate_server(
+  certificate: rcgen::Certificate,
+) -> (Url, Certificate, JoinHandle<io::Result<Vec<u8>>>) {
+  let certificate_der = Certificate(certificate.serialize_der().unwrap());
+  let private_key = PrivateKey(certificate.serialize_private_key_der());
+  let configuration = ServerConfig::builder()
+    .with_safe_defaults()
+    .with_no_client_auth()
+    .with_single_cert(vec![certificate_der.clone()], private_key)
+    .unwrap();
+
+  spawn_tls_server_with_configuration(
+    configuration,
+    certificate_der,
+    b"20 text/gemini\r\nhello".to_vec(),
+    Duration::ZERO,
+  )
+}
+
+fn dated_certificate(
+  not_before_year: i32,
+  not_after_year: i32,
+) -> rcgen::Certificate {
+  let mut parameters =
+    rcgen::CertificateParams::new(vec!["elsewhere.test".to_owned()]);
+
+  parameters.not_before = rcgen::date_time_ymd(not_before_year, 1, 1);
+  parameters.not_after = rcgen::date_time_ymd(not_after_year, 1, 1);
+  parameters.is_ca = rcgen::IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
+
+  rcgen::Certificate::from_params(parameters).unwrap()
 }
 
 fn options_with_certificate(
@@ -157,6 +214,116 @@ fn blocking_tofu_remembers_first_certificate() {
     Some(&certificate.0)
   );
   assert!(server.join().unwrap().is_ok());
+}
+
+#[cfg(feature = "blocking")]
+#[test]
+fn blocking_tofu_accepts_ca_certificate_without_names() {
+  let (url, certificate, server) =
+    spawn_certificate_server(unnamed_ca_certificate());
+  let mut store = MemoryCertificates::default();
+  let response = germ::request::blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .unwrap();
+
+  assert_eq!(response.content().as_deref(), Some("hello"));
+  assert_eq!(
+    store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+    Some(&certificate.0)
+  );
+  assert!(server.join().unwrap().is_ok());
+}
+
+#[cfg(feature = "blocking")]
+#[test]
+fn blocking_tofu_pins_certificates_regardless_of_validity_dates() {
+  for (not_before_year, not_after_year) in [(2018, 2019), (3000, 3001)] {
+    let (url, certificate, server) = spawn_certificate_server(
+      dated_certificate(not_before_year, not_after_year),
+    );
+    let mut store = MemoryCertificates::default();
+    let response = germ::request::blocking::request_with_tofu(
+      &url,
+      &mut store,
+      &Default::default(),
+    )
+    .unwrap();
+
+    assert_eq!(response.content().as_deref(), Some("hello"));
+    assert_eq!(
+      store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+      Some(&certificate.0)
+    );
+    assert!(server.join().unwrap().is_ok());
+  }
+}
+
+#[cfg(feature = "blocking")]
+#[test]
+fn blocking_tofu_replaces_expired_pin_after_tls_signature_verification() {
+  let previous_certificate =
+    dated_certificate(2018, 2019).serialize_der().unwrap();
+  let (url, certificate, server) =
+    spawn_certificate_server(unnamed_ca_certificate());
+  let mut store = MemoryCertificates::default();
+
+  store.certificates.insert(
+    ("localhost".to_owned(), url.port().unwrap()),
+    previous_certificate,
+  );
+
+  let response = germ::request::blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .unwrap();
+
+  assert_eq!(response.content().as_deref(), Some("hello"));
+  assert_eq!(
+    store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+    Some(&certificate.0)
+  );
+  assert!(server.join().unwrap().is_ok());
+}
+
+#[cfg(feature = "blocking")]
+#[test]
+fn blocking_tofu_rejects_invalid_handshake_signatures() {
+  for version in [&rustls::version::TLS12, &rustls::version::TLS13] {
+    let certificate = unnamed_ca_certificate();
+    let certificate_der = Certificate(certificate.serialize_der().unwrap());
+    let other_certificate = unnamed_ca_certificate();
+    let private_key = PrivateKey(other_certificate.serialize_private_key_der());
+    let configuration = ServerConfig::builder()
+      .with_safe_default_cipher_suites()
+      .with_safe_default_kx_groups()
+      .with_protocol_versions(&[version])
+      .unwrap()
+      .with_no_client_auth()
+      .with_single_cert(vec![certificate_der.clone()], private_key)
+      .unwrap();
+    let (url, _, server) = spawn_tls_server_with_configuration(
+      configuration,
+      certificate_der,
+      b"20 text/gemini\r\nhello".to_vec(),
+      Duration::ZERO,
+    );
+    let mut store = MemoryCertificates::default();
+    let error = germ::request::blocking::request_with_tofu(
+      &url,
+      &mut store,
+      &Default::default(),
+    )
+    .unwrap_err();
+
+    assert_certificate_error(&error, CertificateError::BadSignature);
+    assert!(store.certificates.is_empty());
+    assert_handshake_rejected(server);
+  }
 }
 
 #[cfg(feature = "blocking")]
@@ -231,19 +398,22 @@ fn blocking_tofu_rejects_store_failure_before_sending_url() {
 
 #[cfg(feature = "blocking")]
 #[test]
-fn blocking_tofu_rejects_wrong_hostname() {
-  let (url, _, server) = spawn_tls_server("elsewhere.test");
+fn blocking_tofu_pins_certificate_with_unrelated_hostname() {
+  let (url, certificate, server) = spawn_tls_server("elsewhere.test");
   let mut store = MemoryCertificates::default();
-  let error = germ::request::blocking::request_with_tofu(
+  let response = germ::request::blocking::request_with_tofu(
     &url,
     &mut store,
     &Default::default(),
   )
-  .unwrap_err();
+  .unwrap();
 
-  assert_certificate_error(&error, CertificateError::NotValidForName);
-  assert!(store.certificates.is_empty());
-  assert_handshake_rejected(server);
+  assert_eq!(response.content().as_deref(), Some("hello"));
+  assert_eq!(
+    store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+    Some(&certificate.0)
+  );
+  assert!(server.join().unwrap().is_ok());
 }
 
 #[cfg(feature = "request")]
@@ -251,6 +421,83 @@ fn blocking_tofu_rejects_wrong_hostname() {
 async fn async_tofu_remembers_first_certificate() {
   let (url, certificate, server) = spawn_tls_server("localhost");
   let mut store = MemoryCertificates::default();
+  let response = germ::request::non_blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .await
+  .unwrap();
+
+  assert_eq!(response.content().as_deref(), Some("hello"));
+  assert_eq!(
+    store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+    Some(&certificate.0)
+  );
+  assert!(server.join().unwrap().is_ok());
+}
+
+#[cfg(feature = "request")]
+#[tokio::test]
+async fn async_tofu_accepts_ca_certificate_without_names() {
+  let (url, certificate, server) =
+    spawn_certificate_server(unnamed_ca_certificate());
+  let mut store = MemoryCertificates::default();
+  let response = germ::request::non_blocking::request_with_tofu(
+    &url,
+    &mut store,
+    &Default::default(),
+  )
+  .await
+  .unwrap();
+
+  assert_eq!(response.content().as_deref(), Some("hello"));
+  assert_eq!(
+    store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+    Some(&certificate.0)
+  );
+  assert!(server.join().unwrap().is_ok());
+}
+
+#[cfg(feature = "request")]
+#[tokio::test]
+async fn async_tofu_pins_certificates_regardless_of_validity_dates() {
+  for (not_before_year, not_after_year) in [(2018, 2019), (3000, 3001)] {
+    let (url, certificate, server) = spawn_certificate_server(
+      dated_certificate(not_before_year, not_after_year),
+    );
+    let mut store = MemoryCertificates::default();
+    let response = germ::request::non_blocking::request_with_tofu(
+      &url,
+      &mut store,
+      &Default::default(),
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(response.content().as_deref(), Some("hello"));
+    assert_eq!(
+      store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+      Some(&certificate.0)
+    );
+    assert!(server.join().unwrap().is_ok());
+  }
+}
+
+#[cfg(feature = "request")]
+#[tokio::test]
+async fn async_tofu_replaces_expired_pin_after_tls_signature_verification() {
+  let previous_certificate =
+    dated_certificate(2018, 2019).serialize_der().unwrap();
+  let (url, certificate, server) =
+    spawn_certificate_server(unnamed_ca_certificate());
+  let mut store = MemoryCertificates::default();
+
+  store.certificates.insert(
+    ("localhost".to_owned(), url.port().unwrap()),
+    previous_certificate,
+  );
+
   let response = germ::request::non_blocking::request_with_tofu(
     &url,
     &mut store,
@@ -315,20 +562,23 @@ async fn async_tofu_rejects_store_failure_before_sending_url() {
 
 #[cfg(feature = "request")]
 #[tokio::test]
-async fn async_tofu_rejects_wrong_hostname() {
-  let (url, _, server) = spawn_tls_server("elsewhere.test");
+async fn async_tofu_pins_certificate_with_unrelated_hostname() {
+  let (url, certificate, server) = spawn_tls_server("elsewhere.test");
   let mut store = MemoryCertificates::default();
-  let error = germ::request::non_blocking::request_with_tofu(
+  let response = germ::request::non_blocking::request_with_tofu(
     &url,
     &mut store,
     &Default::default(),
   )
   .await
-  .unwrap_err();
+  .unwrap();
 
-  assert_certificate_error(&error, CertificateError::NotValidForName);
-  assert!(store.certificates.is_empty());
-  assert_handshake_rejected(server);
+  assert_eq!(response.content().as_deref(), Some("hello"));
+  assert_eq!(
+    store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
+    Some(&certificate.0)
+  );
+  assert!(server.join().unwrap().is_ok());
 }
 
 #[cfg(feature = "blocking")]

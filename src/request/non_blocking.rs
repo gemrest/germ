@@ -78,12 +78,16 @@ pub async fn request_with_options(
 
 /// Makes a request using a caller-owned trust-on-first-use certificate store.
 ///
-/// The first verified certificate is saved before the request URL is sent.
+/// The first certificate is saved after TLS signature verification and before
+/// the request URL is sent.
 /// Later requests require the same certificate. An expired certificate may be
 /// replaced; an unexpected change before expiry returns an error. The store
 /// must persist the certificate for this policy to work across process runs.
 /// TOFU uses the timeout and response size limits in `options` and ignores
 /// `options.root_certificates`.
+/// TOFU accepts well-formed certificates regardless of their names, validity
+/// dates, or CA flags, and verifies TLS handshake signatures. A stored
+/// certificate's expiry date determines when its pin may be replaced.
 ///
 /// # Errors
 ///
