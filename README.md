@@ -13,14 +13,14 @@ features to use `ast`, `convert`, `meta`, or `quick` without normal dependencies
 
 ```toml
 [dependencies]
-germ = "0.5.0"
+germ = "0.5.1"
 ```
 
 To select features without the default request client:
 
 ```toml
 [dependencies]
-germ = { version = "0.5.0", default-features = false, features = ["ast"] }
+germ = { version = "0.5.1", default-features = false, features = ["ast"] }
 ```
 
 ### Features
