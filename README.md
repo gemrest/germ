@@ -11,10 +11,10 @@ response metadata, and makes Gemini requests.
 
 ```toml
 [dependencies]
-germ = "0.5.1"
+germ = "0.5.2"
 
 # For Gemtext parsing only, use this instead.
-# germ = { version = "0.5.1", default-features = false, features = ["ast"] }
+# germ = { version = "0.5.2", default-features = false, features = ["ast"] }
 ```
 
 ### Features
