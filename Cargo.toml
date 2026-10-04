@@ -38,6 +38,10 @@ name = "html"
 required-features = ["convert"]
 
 [[example]]
+name = "html_custom"
+required-features = ["convert"]
+
+[[example]]
 name = "markdown"
 required-features = ["convert"]
 
