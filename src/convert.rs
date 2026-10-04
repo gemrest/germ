@@ -2,7 +2,7 @@
 
 use crate::ast::Ast;
 
-mod html;
+pub mod html;
 mod markdown;
 
 #[cfg(feature = "macros")] mod macros;

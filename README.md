@@ -78,6 +78,10 @@ URLs; other schemes are shown as text. Markdown conversion escapes literal
 text, link labels, and destinations, and chooses a code fence that does not
 close inside preformatted content.
 
+`convert::html::Renderer` adds caller-owned text formatting, custom node
+rendering with standard fallback, and finalisation. Default conversion stays
+escaped; custom hook output is trusted HTML.
+
 `Meta` parses quoted MIME parameters and quotes values as needed when formatting
 them.
 
