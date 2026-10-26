@@ -151,7 +151,7 @@ fn previous_certificate_expired(certificate: &[u8]) -> bool {
     return false;
   };
   let expires_at = SystemTime::UNIX_EPOCH
-    + certificate.tbs_certificate.validity.not_after.to_unix_duration();
+    + certificate.tbs_certificate().validity().not_after.to_unix_duration();
 
   expires_at < SystemTime::now()
 }
