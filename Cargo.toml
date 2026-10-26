@@ -62,19 +62,19 @@ name = "request_blocking_to_gemtext_from_ast"
 required-features = ["ast", "blocking"]
 
 [dependencies]
-anyhow = { version = "1.0.98", optional = true } # `Result`
+anyhow = { version = "1.0.104", optional = true } # `Result`
 rustls = { version = "0.21.12", optional = true, features = ["dangerous_configuration"] } # TLS
-webpki-roots = { version = "1.0.9", optional = true } # CA certificates
+webpki-roots = { version = "1.0.11", optional = true } # CA certificates
 x509-cert = { version = "0.2.5", optional = true, default-features = false } # Certificate parsing
 tokio-rustls = { version = "0.24.1", optional = true } # Non-blocking TLS
-tokio = { version = "1.45.1", optional = true, default-features = false, features = [
+tokio = { version = "1.53.3", optional = true, default-features = false, features = [
   "net",
   "io-util",
   "rt-multi-thread",
   "macros",
   "time",
 ] } # Non-blocking I/O
-url = { version = "2.5.4", optional = true } # URL Validation
+url = { version = "2.5.8", optional = true } # URL Validation
 
 [dev-dependencies]
 rcgen = "=0.12.1"
