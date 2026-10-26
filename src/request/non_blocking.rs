@@ -70,7 +70,7 @@ pub async fn request_with_options(
   request_with_config(
     url,
     options,
-    client_config(options.root_certificates.clone()),
+    client_config(options.root_certificates.clone())?,
     |_, _, _| Ok(()),
   )
   .await
@@ -101,7 +101,7 @@ pub async fn request_with_tofu(
   request_with_config(
     url,
     options,
-    tofu_client_config(),
+    tofu_client_config()?,
     |certificate, host, port| check_tofu(store, host, port, certificate),
   )
   .await
@@ -112,7 +112,7 @@ async fn request_with_config(
   options: &RequestOptions,
   config: rustls::ClientConfig,
   check_certificate: impl FnOnce(
-    Option<&rustls::Certificate>,
+    Option<&rustls::pki_types::CertificateDer<'_>>,
     &str,
     u16,
   ) -> anyhow::Result<()>,
@@ -121,7 +121,7 @@ async fn request_with_config(
   let domain = url
     .domain()
     .ok_or_else(|| anyhow::anyhow!("Invalid URL: missing domain"))?;
-  let server_name = rustls::ServerName::try_from(domain)?;
+  let server_name = rustls::pki_types::ServerName::try_from(domain.to_owned())?;
   let port = url.port().unwrap_or(DEFAULT_GEMINI_PORT);
 
   tokio::time::timeout(options.timeout, async {

@@ -63,10 +63,10 @@ required-features = ["ast", "blocking"]
 
 [dependencies]
 anyhow = { version = "1.0.104", optional = true } # `Result`
-rustls = { version = "0.21.12", optional = true, features = ["dangerous_configuration"] } # TLS
+rustls = { version = "0.23.46", optional = true, default-features = false, features = ["ring", "std", "tls12"] } # TLS
 webpki-roots = { version = "1.0.11", optional = true } # CA certificates
 x509-cert = { version = "0.2.5", optional = true, default-features = false } # Certificate parsing
-tokio-rustls = { version = "0.24.1", optional = true } # Non-blocking TLS
+tokio-rustls = { version = "0.26.6", optional = true, default-features = false, features = ["ring", "tls12"] } # Non-blocking TLS
 tokio = { version = "1.53.3", optional = true, default-features = false, features = [
   "net",
   "io-util",
@@ -77,4 +77,4 @@ tokio = { version = "1.53.3", optional = true, default-features = false, feature
 url = { version = "2.5.8", optional = true } # URL Validation
 
 [dev-dependencies]
-rcgen = "=0.12.1"
+rcgen = { version = "0.14.7", default-features = false, features = ["ring"] }

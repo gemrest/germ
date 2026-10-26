@@ -1,9 +1,10 @@
 #![cfg(any(feature = "blocking", feature = "request"))]
 
 use {
+  rcgen::{CertificateParams, CertifiedKey, KeyPair},
   rustls::{
-    Certificate, CertificateError, PrivateKey, ServerConfig, ServerConnection,
-    StreamOwned,
+    CertificateError, ServerConfig, ServerConnection, StreamOwned,
+    pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer},
   },
   std::{
     collections::HashMap,
@@ -44,14 +45,31 @@ impl germ::request::CertificateStore for MemoryCertificates {
   }
 }
 
-fn assert_certificate_error(error: &anyhow::Error, expected: CertificateError) {
-  let actual = error
+fn certificate_error(error: &anyhow::Error) -> Option<&CertificateError> {
+  match error
     .downcast_ref::<io::Error>()
     .and_then(io::Error::get_ref)
-    .and_then(|cause| cause.downcast_ref::<rustls::Error>());
+    .and_then(|cause| cause.downcast_ref::<rustls::Error>())
+  {
+    Some(rustls::Error::InvalidCertificate(reason)) => Some(reason),
+    _ => None,
+  }
+}
 
+fn assert_certificate_error(error: &anyhow::Error, expected: CertificateError) {
+  assert_eq!(
+    certificate_error(error),
+    Some(&expected),
+    "Unexpected TLS error: {error:?}"
+  );
+}
+
+fn assert_not_valid_for_name(error: &anyhow::Error) {
   assert!(
-    matches!(actual, Some(rustls::Error::InvalidCertificate(reason)) if reason == &expected),
+    matches!(
+      certificate_error(error),
+      Some(CertificateError::NotValidForNameContext { .. })
+    ),
     "Unexpected TLS error: {error:?}"
   );
 }
@@ -72,9 +90,10 @@ fn assert_no_request_sent(server: JoinHandle<io::Result<Vec<u8>>>) {
   }
 }
 
-fn spawn_tls_server(
-  certificate_name: &str,
-) -> (Url, Certificate, JoinHandle<io::Result<Vec<u8>>>) {
+type TlsServer =
+  (Url, CertificateDer<'static>, JoinHandle<io::Result<Vec<u8>>>);
+
+fn spawn_tls_server(certificate_name: &str) -> TlsServer {
   spawn_tls_server_with_response(
     certificate_name,
     b"20 text/gemini\r\nhello".to_vec(),
@@ -86,32 +105,49 @@ fn spawn_tls_server_with_response(
   certificate_name: &str,
   response_bytes: Vec<u8>,
   response_delay: Duration,
-) -> (Url, Certificate, JoinHandle<io::Result<Vec<u8>>>) {
+) -> TlsServer {
   let certificate =
     rcgen::generate_simple_self_signed(vec![certificate_name.to_owned()])
       .unwrap();
-  let certificate_der = Certificate(certificate.serialize_der().unwrap());
-  let private_key = PrivateKey(certificate.serialize_private_key_der());
-  let configuration = ServerConfig::builder()
-    .with_safe_defaults()
-    .with_no_client_auth()
-    .with_single_cert(vec![certificate_der.clone()], private_key)
-    .unwrap();
 
   spawn_tls_server_with_configuration(
-    configuration,
-    certificate_der,
+    server_configuration(&certificate, &certificate.signing_key),
+    certificate.cert.der().clone(),
     response_bytes,
     response_delay,
   )
 }
 
+fn private_key(key_pair: &KeyPair) -> PrivateKeyDer<'static> {
+  PrivatePkcs8KeyDer::from(key_pair.serialize_der()).into()
+}
+
+fn server_configuration(
+  certificate: &CertifiedKey<KeyPair>,
+  signing_key: &KeyPair,
+) -> ServerConfig {
+  ServerConfig::builder()
+    .with_no_client_auth()
+    .with_single_cert(
+      vec![certificate.cert.der().clone()],
+      private_key(signing_key),
+    )
+    .unwrap()
+}
+
+fn self_signed(parameters: CertificateParams) -> CertifiedKey<KeyPair> {
+  let signing_key = KeyPair::generate().unwrap();
+  let cert = parameters.self_signed(&signing_key).unwrap();
+
+  CertifiedKey { cert, signing_key }
+}
+
 fn spawn_tls_server_with_configuration(
   configuration: ServerConfig,
-  certificate: Certificate,
+  certificate: CertificateDer<'static>,
   response_bytes: Vec<u8>,
   response_delay: Duration,
-) -> (Url, Certificate, JoinHandle<io::Result<Vec<u8>>>) {
+) -> TlsServer {
   let listener = TcpListener::bind("127.0.0.1:0").unwrap();
   let url = Url::parse(&format!(
     "gemini://localhost:{}/",
@@ -141,29 +177,19 @@ fn spawn_tls_server_with_configuration(
   (url, certificate, server)
 }
 
-fn unnamed_ca_certificate() -> rcgen::Certificate {
-  let mut parameters = rcgen::CertificateParams::default();
+fn unnamed_ca_certificate() -> CertifiedKey<KeyPair> {
+  let mut parameters = CertificateParams::default();
 
   parameters.distinguished_name = rcgen::DistinguishedName::new();
   parameters.is_ca = rcgen::IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
 
-  rcgen::Certificate::from_params(parameters).unwrap()
+  self_signed(parameters)
 }
 
-fn spawn_certificate_server(
-  certificate: rcgen::Certificate,
-) -> (Url, Certificate, JoinHandle<io::Result<Vec<u8>>>) {
-  let certificate_der = Certificate(certificate.serialize_der().unwrap());
-  let private_key = PrivateKey(certificate.serialize_private_key_der());
-  let configuration = ServerConfig::builder()
-    .with_safe_defaults()
-    .with_no_client_auth()
-    .with_single_cert(vec![certificate_der.clone()], private_key)
-    .unwrap();
-
+fn spawn_certificate_server(certificate: CertifiedKey<KeyPair>) -> TlsServer {
   spawn_tls_server_with_configuration(
-    configuration,
-    certificate_der,
+    server_configuration(&certificate, &certificate.signing_key),
+    certificate.cert.der().clone(),
     b"20 text/gemini\r\nhello".to_vec(),
     Duration::ZERO,
   )
@@ -172,26 +198,26 @@ fn spawn_certificate_server(
 fn dated_certificate(
   not_before_year: i32,
   not_after_year: i32,
-) -> rcgen::Certificate {
+) -> CertifiedKey<KeyPair> {
   let mut parameters =
-    rcgen::CertificateParams::new(vec!["elsewhere.test".to_owned()]);
+    CertificateParams::new(vec!["elsewhere.test".to_owned()]).unwrap();
 
   parameters.not_before = rcgen::date_time_ymd(not_before_year, 1, 1);
   parameters.not_after = rcgen::date_time_ymd(not_after_year, 1, 1);
   parameters.is_ca = rcgen::IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
 
-  rcgen::Certificate::from_params(parameters).unwrap()
+  self_signed(parameters)
 }
 
 fn options_with_certificate(
-  certificate: &Certificate,
+  certificate: &CertificateDer<'static>,
 ) -> germ::request::RequestOptions {
   let mut options = germ::request::RequestOptions {
     root_certificates: rustls::RootCertStore::empty(),
     ..Default::default()
   };
 
-  options.root_certificates.add(certificate).unwrap();
+  options.root_certificates.add(certificate.clone()).unwrap();
 
   options
 }
@@ -211,7 +237,7 @@ fn blocking_tofu_remembers_first_certificate() {
   assert_eq!(response.content().as_deref(), Some("hello"));
   assert_eq!(
     store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-    Some(&certificate.0)
+    Some(&certificate.to_vec())
   );
   assert!(server.join().unwrap().is_ok());
 }
@@ -232,7 +258,7 @@ fn blocking_tofu_accepts_ca_certificate_without_names() {
   assert_eq!(response.content().as_deref(), Some("hello"));
   assert_eq!(
     store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-    Some(&certificate.0)
+    Some(&certificate.to_vec())
   );
   assert!(server.join().unwrap().is_ok());
 }
@@ -255,7 +281,7 @@ fn blocking_tofu_pins_certificates_regardless_of_validity_dates() {
     assert_eq!(response.content().as_deref(), Some("hello"));
     assert_eq!(
       store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-      Some(&certificate.0)
+      Some(&certificate.to_vec())
     );
     assert!(server.join().unwrap().is_ok());
   }
@@ -264,8 +290,7 @@ fn blocking_tofu_pins_certificates_regardless_of_validity_dates() {
 #[cfg(feature = "blocking")]
 #[test]
 fn blocking_tofu_replaces_expired_pin_after_tls_signature_verification() {
-  let previous_certificate =
-    dated_certificate(2018, 2019).serialize_der().unwrap();
+  let previous_certificate = dated_certificate(2018, 2019).cert.der().to_vec();
   let (url, certificate, server) =
     spawn_certificate_server(unnamed_ca_certificate());
   let mut store = MemoryCertificates::default();
@@ -285,7 +310,7 @@ fn blocking_tofu_replaces_expired_pin_after_tls_signature_verification() {
   assert_eq!(response.content().as_deref(), Some("hello"));
   assert_eq!(
     store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-    Some(&certificate.0)
+    Some(&certificate.to_vec())
   );
   assert!(server.join().unwrap().is_ok());
 }
@@ -295,20 +320,23 @@ fn blocking_tofu_replaces_expired_pin_after_tls_signature_verification() {
 fn blocking_tofu_rejects_invalid_handshake_signatures() {
   for version in [&rustls::version::TLS12, &rustls::version::TLS13] {
     let certificate = unnamed_ca_certificate();
-    let certificate_der = Certificate(certificate.serialize_der().unwrap());
     let other_certificate = unnamed_ca_certificate();
-    let private_key = PrivateKey(other_certificate.serialize_private_key_der());
-    let configuration = ServerConfig::builder()
-      .with_safe_default_cipher_suites()
-      .with_safe_default_kx_groups()
-      .with_protocol_versions(&[version])
-      .unwrap()
-      .with_no_client_auth()
-      .with_single_cert(vec![certificate_der.clone()], private_key)
-      .unwrap();
+    let mismatched_key = rustls::sign::CertifiedKey::new(
+      vec![certificate.cert.der().clone()],
+      rustls::crypto::ring::sign::any_supported_type(&private_key(
+        &other_certificate.signing_key,
+      ))
+      .unwrap(),
+    );
+    let configuration =
+      ServerConfig::builder_with_protocol_versions(&[version])
+        .with_no_client_auth()
+        .with_cert_resolver(Arc::new(rustls::sign::SingleCertAndKey::from(
+          mismatched_key,
+        )));
     let (url, _, server) = spawn_tls_server_with_configuration(
       configuration,
-      certificate_der,
+      certificate.cert.der().clone(),
       b"20 text/gemini\r\nhello".to_vec(),
       Duration::ZERO,
     );
@@ -332,9 +360,10 @@ fn blocking_tofu_accepts_a_previously_pinned_certificate() {
   let (url, certificate, server) = spawn_tls_server("localhost");
   let mut store = MemoryCertificates::default();
 
-  store
-    .certificates
-    .insert(("localhost".to_owned(), url.port().unwrap()), certificate.0);
+  store.certificates.insert(
+    ("localhost".to_owned(), url.port().unwrap()),
+    certificate.to_vec(),
+  );
 
   let response = germ::request::blocking::request_with_tofu(
     &url,
@@ -354,8 +383,9 @@ fn blocking_tofu_rejects_changed_certificate_before_sending_url() {
   let different_certificate =
     rcgen::generate_simple_self_signed(vec!["localhost".to_owned()])
       .unwrap()
-      .serialize_der()
-      .unwrap();
+      .cert
+      .der()
+      .to_vec();
   let mut store = MemoryCertificates::default();
 
   store.certificates.insert(
@@ -371,7 +401,7 @@ fn blocking_tofu_rejects_changed_certificate_before_sending_url() {
   .unwrap_err();
 
   assert!(error.to_string().contains("certificate changed"));
-  assert_ne!(different_certificate, certificate.0);
+  assert_ne!(different_certificate, certificate.to_vec());
   assert_eq!(
     store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
     Some(&different_certificate)
@@ -411,7 +441,7 @@ fn blocking_tofu_pins_certificate_with_unrelated_hostname() {
   assert_eq!(response.content().as_deref(), Some("hello"));
   assert_eq!(
     store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-    Some(&certificate.0)
+    Some(&certificate.to_vec())
   );
   assert!(server.join().unwrap().is_ok());
 }
@@ -432,7 +462,7 @@ async fn async_tofu_remembers_first_certificate() {
   assert_eq!(response.content().as_deref(), Some("hello"));
   assert_eq!(
     store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-    Some(&certificate.0)
+    Some(&certificate.to_vec())
   );
   assert!(server.join().unwrap().is_ok());
 }
@@ -454,7 +484,7 @@ async fn async_tofu_accepts_ca_certificate_without_names() {
   assert_eq!(response.content().as_deref(), Some("hello"));
   assert_eq!(
     store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-    Some(&certificate.0)
+    Some(&certificate.to_vec())
   );
   assert!(server.join().unwrap().is_ok());
 }
@@ -478,7 +508,7 @@ async fn async_tofu_pins_certificates_regardless_of_validity_dates() {
     assert_eq!(response.content().as_deref(), Some("hello"));
     assert_eq!(
       store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-      Some(&certificate.0)
+      Some(&certificate.to_vec())
     );
     assert!(server.join().unwrap().is_ok());
   }
@@ -487,8 +517,7 @@ async fn async_tofu_pins_certificates_regardless_of_validity_dates() {
 #[cfg(feature = "request")]
 #[tokio::test]
 async fn async_tofu_replaces_expired_pin_after_tls_signature_verification() {
-  let previous_certificate =
-    dated_certificate(2018, 2019).serialize_der().unwrap();
+  let previous_certificate = dated_certificate(2018, 2019).cert.der().to_vec();
   let (url, certificate, server) =
     spawn_certificate_server(unnamed_ca_certificate());
   let mut store = MemoryCertificates::default();
@@ -509,7 +538,7 @@ async fn async_tofu_replaces_expired_pin_after_tls_signature_verification() {
   assert_eq!(response.content().as_deref(), Some("hello"));
   assert_eq!(
     store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-    Some(&certificate.0)
+    Some(&certificate.to_vec())
   );
   assert!(server.join().unwrap().is_ok());
 }
@@ -521,8 +550,9 @@ async fn async_tofu_rejects_changed_certificate_before_sending_url() {
   let different_certificate =
     rcgen::generate_simple_self_signed(vec!["localhost".to_owned()])
       .unwrap()
-      .serialize_der()
-      .unwrap();
+      .cert
+      .der()
+      .to_vec();
   let mut store = MemoryCertificates::default();
 
   store.certificates.insert(
@@ -576,7 +606,7 @@ async fn async_tofu_pins_certificate_with_unrelated_hostname() {
   assert_eq!(response.content().as_deref(), Some("hello"));
   assert_eq!(
     store.certificates.get(&("localhost".to_owned(), url.port().unwrap())),
-    Some(&certificate.0)
+    Some(&certificate.to_vec())
   );
   assert!(server.join().unwrap().is_ok());
 }
@@ -598,7 +628,7 @@ fn blocking_request_accepts_explicitly_trusted_certificate() {
   let mut roots = rustls::RootCertStore::empty();
 
   url.set_fragment(Some("not-sent"));
-  roots.add(&certificate).unwrap();
+  roots.add(certificate).unwrap();
 
   let response =
     germ::request::blocking::request_with_roots(&url, &roots).unwrap();
@@ -616,12 +646,12 @@ fn blocking_request_rejects_wrong_hostname() {
   let (url, certificate, server) = spawn_tls_server("elsewhere.test");
   let mut roots = rustls::RootCertStore::empty();
 
-  roots.add(&certificate).unwrap();
+  roots.add(certificate).unwrap();
 
   let error =
     germ::request::blocking::request_with_roots(&url, &roots).unwrap_err();
 
-  assert_certificate_error(&error, CertificateError::NotValidForName);
+  assert_not_valid_for_name(&error);
   assert_handshake_rejected(server);
 }
 
@@ -700,7 +730,7 @@ async fn async_request_accepts_explicitly_trusted_certificate() {
   let mut roots = rustls::RootCertStore::empty();
 
   url.set_fragment(Some("not-sent"));
-  roots.add(&certificate).unwrap();
+  roots.add(certificate).unwrap();
 
   let response = germ::request::non_blocking::request_with_roots(&url, &roots)
     .await
@@ -719,13 +749,13 @@ async fn async_request_rejects_wrong_hostname() {
   let (url, certificate, server) = spawn_tls_server("elsewhere.test");
   let mut roots = rustls::RootCertStore::empty();
 
-  roots.add(&certificate).unwrap();
+  roots.add(certificate).unwrap();
 
   let error = germ::request::non_blocking::request_with_roots(&url, &roots)
     .await
     .unwrap_err();
 
-  assert_certificate_error(&error, CertificateError::NotValidForName);
+  assert_not_valid_for_name(&error);
   assert_handshake_rejected(server);
 }
 

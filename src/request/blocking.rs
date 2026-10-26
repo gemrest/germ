@@ -122,7 +122,7 @@ pub fn request_with_options(
   request_with_config(
     url,
     options,
-    client_config(options.root_certificates.clone()),
+    client_config(options.root_certificates.clone())?,
     |_, _, _| Ok(()),
   )
 }
@@ -152,7 +152,7 @@ pub fn request_with_tofu(
   request_with_config(
     url,
     options,
-    tofu_client_config(),
+    tofu_client_config()?,
     |certificate, host, port| check_tofu(store, host, port, certificate),
   )
 }
@@ -162,7 +162,7 @@ fn request_with_config(
   options: &RequestOptions,
   config: rustls::ClientConfig,
   check_certificate: impl FnOnce(
-    Option<&rustls::Certificate>,
+    Option<&rustls::pki_types::CertificateDer<'_>>,
     &str,
     u16,
   ) -> anyhow::Result<()>,
@@ -171,6 +171,7 @@ fn request_with_config(
   let domain = url
     .domain()
     .ok_or_else(|| anyhow::anyhow!("Invalid URL: missing domain"))?;
+  let server_name = rustls::pki_types::ServerName::try_from(domain.to_owned())?;
   let port = url.port().unwrap_or(DEFAULT_GEMINI_PORT);
   let deadline = Instant::now()
     .checked_add(options.timeout)
@@ -195,7 +196,7 @@ fn request_with_config(
     deadline,
   };
   let mut connection =
-    rustls::ClientConnection::new(Arc::new(config), domain.try_into()?)?;
+    rustls::ClientConnection::new(Arc::new(config), server_name)?;
 
   connection.complete_io(&mut stream)?;
   check_certificate(
